@@ -1,257 +1,275 @@
-/**
- * app.js
- * Orquesta la lógica principal de la aplicación Check Multi-Stream en main.html.
- * Maneja eventos, llamadas a APIs (a través de módulos) y actualizaciones de UI (a través de ui.js).
- */
+// AL INICIO DE js/app.js (antes de todo)
+console.log("app.js: Script iniciado y parseado por el navegador.");
 
-// Asegurarse de que el DOM está completamente cargado
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("app.js: Evento DOMContentLoaded disparado. El HTML está listo.");
+
     // --- Autenticación y Protección de Ruta ---
-    if (!isUserLoggedIn()) { // Función de auth.js
-        console.warn('Usuario no autenticado. Redirigiendo al login...');
+    // Estas funciones (isUserLoggedIn, logoutUser) deben estar definidas en auth.js y auth.js debe cargarse ANTES que app.js
+    if (!isUserLoggedIn()) {
+        console.warn('app.js: Usuario no autenticado. Redirigiendo a index.html...');
         window.location.href = 'index.html';
         return; // Detener la ejecución de este script si no está logueado
     }
+    console.log("app.js: Usuario autenticado. Continuando con la inicialización de la app.");
 
     // --- Selectores de Elementos del DOM ---
     const fileInputControl = document.getElementById('fileInputControl');
     const checkStreamsButton = document.getElementById('checkStreamsButton');
     const logoutButton = document.getElementById('logoutButton');
-    // Otros selectores ya están definidos en ui.js y son usados por sus funciones
+    // Otros selectores ya están definidos en ui.js y son usados por sus funciones (ej. ui.updateFileNameDisplay)
 
     // --- Estado de la Aplicación ---
     let selectedFile = null;
     let monitoredStreams = []; // Array para almacenar la info de los streams que se están monitoreando
     let refreshIntervalId = null;
     const REFRESH_INTERVAL_MS = 60000 * 2; // Refrescar cada 2 minutos (ajustar según necesidad y cuotas de API)
+    console.log("app.js: Variables de estado inicializadas.");
 
     // --- Inicialización ---
-    functioninitializeApp() {
+    function initializeApp() {
+        console.log("app.js: initializeApp() llamada."); // PRIMERA LÍNEA DENTRO DE initializeApp
         // El tema ya se inicializa con theme.js
-        // ui.js ya muestra el mensaje de "no hay streams" si la tabla está vacía al cargar
-        
-        // Mostrar nombre de usuario (opcional, si tienes dónde ponerlo en el header)
+        // ui.js (cargado antes) ya podría haber manejado el mensaje de "no hay streams" en su propio DOMContentLoaded
+
+        // Mostrar nombre de usuario (opcional)
         // const username = getAuthenticatedUsername(); // de auth.js
-        // if (username) { /* ... actualizar UI ... */ }
+        // if (username) { console.log("app.js: Nombre de usuario obtenido:", username); /* ... actualizar UI ... */ }
 
         setupEventListeners();
-        // No cargamos streams al inicio a menos que los guardemos en localStorage,
-        // lo cual no está implementado en esta versión para mantenerlo simple.
-        // Se espera que el usuario cargue un archivo.
-        ui.showNoStreamsMessage(true); // Asegurar que el mensaje se muestre al inicio
+        console.log("app.js: setupEventListeners() llamada desde initializeApp.");
+        // Asegurar que el mensaje se muestre si no hay streams (ui.js debe estar cargado)
+        if (typeof ui !== 'undefined' && typeof ui.showNoStreamsMessage === 'function') {
+            ui.showNoStreamsMessage(monitoredStreams.length === 0);
+        } else {
+            console.error("app.js: El objeto 'ui' o 'ui.showNoStreamsMessage' no está disponible en initializeApp.");
+        }
+        console.log("app.js: initializeApp() completada.");
     }
 
     // --- Manejadores de Eventos ---
     function setupEventListeners() {
+        console.log("app.js: setupEventListeners() ejecutándose.");
         if (fileInputControl) {
             fileInputControl.addEventListener('change', handleFileSelect);
+            console.log("app.js: Event listener para 'change' en fileInputControl añadido.");
+        } else {
+            console.warn("app.js: Elemento fileInputControl no encontrado.");
         }
+
         if (checkStreamsButton) {
             checkStreamsButton.addEventListener('click', handleCheckStreams);
+            console.log("app.js: Event listener para 'click' en checkStreamsButton añadido.");
+        } else {
+            console.warn("app.js: Elemento checkStreamsButton no encontrado.");
         }
+
         if (logoutButton) {
             logoutButton.addEventListener('click', () => {
+                console.log("app.js: Botón de logout clickeado.");
                 if (refreshIntervalId) {
-                    clearInterval(refreshIntervalId); // Detener refresco al hacer logout
+                    clearInterval(refreshIntervalId);
+                    console.log("app.js: Intervalo de refresco detenido.");
                 }
                 logoutUser(); // Función de auth.js
             });
+            console.log("app.js: Event listener para 'click' en logoutButton añadido.");
+        } else {
+            console.warn("app.js: Elemento logoutButton no encontrado.");
         }
+        console.log("app.js: setupEventListeners() completado.");
     }
 
     function handleFileSelect(event) {
+        console.log("app.js: handleFileSelect() llamado.");
         selectedFile = event.target.files[0];
         if (selectedFile) {
-            ui.updateFileNameDisplay(selectedFile.name); // de ui.js
-            ui.showAppMessage(`Archivo "${selectedFile.name}" seleccionado. Haz clic en "Verificar Streams".`, 'info', 7000);
+            console.log("app.js: Archivo seleccionado:", selectedFile.name);
+            if (typeof ui !== 'undefined' && typeof ui.updateFileNameDisplay === 'function') {
+                ui.updateFileNameDisplay(selectedFile.name);
+                ui.showAppMessage(`Archivo "${selectedFile.name}" seleccionado. Haz clic en "Verificar Streams".`, 'info', 7000);
+            } else {
+                console.error("app.js: 'ui.updateFileNameDisplay' o 'ui.showAppMessage' no disponible.");
+            }
         } else {
-            ui.updateFileNameDisplay(null); // de ui.js
+            console.log("app.js: Ningún archivo seleccionado.");
+            if (typeof ui !== 'undefined' && typeof ui.updateFileNameDisplay === 'function') {
+                ui.updateFileNameDisplay(null);
+            }
         }
     }
 
     async function handleCheckStreams() {
+        console.log("app.js: handleCheckStreams() llamado.");
         if (!selectedFile) {
-            ui.showAppMessage('Por favor, selecciona un archivo primero.', 'warning'); // de ui.js
+            console.warn("app.js: Intento de verificar streams sin archivo seleccionado.");
+            if (typeof ui !== 'undefined' && typeof ui.showAppMessage === 'function') {
+                ui.showAppMessage('Por favor, selecciona un archivo primero.', 'warning');
+            }
             return;
         }
 
-        ui.showLoadingIndicator(true); // de ui.js
-        ui.clearStreamTable();       // de ui.js
-        monitoredStreams = [];       // Resetear lista de streams monitoreados
+        if (typeof ui !== 'undefined') {
+            ui.showLoadingIndicator(true);
+            ui.clearStreamTable();
+        }
+        monitoredStreams = [];
+        console.log("app.js: Tabla limpiada y streams monitoreados reseteados.");
 
         try {
             const fileContent = await selectedFile.text();
+            console.log("app.js: Contenido del archivo leído.");
             const parsedInputs = parseInputLines(fileContent);
+            console.log("app.js: Entradas parseadas del archivo:", parsedInputs);
 
             if (parsedInputs.length === 0) {
-                ui.showAppMessage('El archivo no contiene entradas válidas o está vacío.', 'warning');
-                ui.showNoStreamsMessage(true);
-                return;
+                console.warn("app.js: El archivo no contiene entradas válidas o está vacío.");
+                if (typeof ui !== 'undefined') {
+                    ui.showAppMessage('El archivo no contiene entradas válidas o está vacío.', 'warning');
+                    ui.showNoStreamsMessage(true);
+                }
+                return; // Importante retornar aquí si no hay nada que procesar
             }
             
-            ui.showAppMessage(`Procesando ${parsedInputs.length} entradas...`, 'info', 3000);
+            if (typeof ui !== 'undefined') {
+                ui.showAppMessage(`Procesando ${parsedInputs.length} entradas...`, 'info', 3000);
+            }
 
-            // Procesar cada entrada y añadirla a la UI inicialmente como "Pendiente" o similar
-            // Luego, las verificaciones reales las actualizarán.
             parsedInputs.forEach(input => {
                 const initialStreamInfo = {
                     platform: input.platform || 'unknown',
                     identifier: input.identifier,
-                    name: input.originalInput, // Usar el input original como nombre temporal
+                    name: input.originalInput,
                     status: 'Pendiente...',
                     lastCheck: '-'
                 };
-                monitoredStreams.push(initialStreamInfo); // Añadir a la lista para monitoreo
-                ui.addStreamToTable(initialStreamInfo); // Añadir a la tabla inmediatamente
+                monitoredStreams.push(initialStreamInfo);
+                if (typeof ui !== 'undefined' && typeof ui.addStreamToTable === 'function') {
+                    ui.addStreamToTable(initialStreamInfo);
+                }
             });
+            console.log("app.js: Streams iniciales añadidos a la tabla y a monitoredStreams.");
 
-            // Iniciar la primera verificación de todos los streams
             await checkAllStreams();
+            console.log("app.js: Primera verificación de todos los streams completada.");
 
-            // Configurar el refresco automático
             if (refreshIntervalId) {
                 clearInterval(refreshIntervalId);
             }
             refreshIntervalId = setInterval(checkAllStreams, REFRESH_INTERVAL_MS);
+            console.log("app.js: Intervalo de refresco configurado cada", REFRESH_INTERVAL_MS, "ms.");
 
         } catch (error) {
-            console.error('Error procesando el archivo:', error);
-            ui.showAppMessage('Error al leer o procesar el archivo.', 'danger');
+            console.error('app.js: Error procesando el archivo en handleCheckStreams:', error);
+            if (typeof ui !== 'undefined' && typeof ui.showAppMessage === 'function') {
+                ui.showAppMessage('Error al leer o procesar el archivo.', 'danger');
+            }
         } finally {
-            ui.showLoadingIndicator(false); // de ui.js
-            ui.updateGlobalLastCheckTime(new Date().toLocaleTimeString()); // de ui.js
+            if (typeof ui !== 'undefined') {
+                ui.showLoadingIndicator(false);
+                ui.updateGlobalLastCheckTime(new Date().toLocaleTimeString());
+            }
+            console.log("app.js: handleCheckStreams() finalizado.");
         }
     }
 
     // --- Lógica de Parseo y Verificación de Streams ---
-
-    /**
-     * Parsea el contenido de texto del archivo en objetos de entrada.
-     * @param {string} textContent - El contenido del archivo.
-     * @returns {Array<object>} Array de objetos { platform: string, identifier: string, originalInput: string }
-     */
     function parseInputLines(textContent) {
-        const lines = textContent.split(/\r?\n/); // Dividir por saltos de línea
+        console.log("app.js: parseInputLines() llamado.");
+        const lines = textContent.split(/\r?\n/);
         const inputs = [];
-
         lines.forEach(line => {
             const trimmedLine = line.trim();
-            if (trimmedLine === '' || trimmedLine.startsWith('#')) { // Ignorar líneas vacías o comentarios
-                return;
-            }
-
+            if (trimmedLine === '' || trimmedLine.startsWith('#')) return;
             let platform = 'unknown';
-            let identifier = trimmedLine; // Por defecto, el identificador es la línea completa
-
-            // Detección básica de plataforma (puede mejorarse mucho con regex más robustos)
-            if (trimmedLine.toLowerCase().includes('youtube.com/') || trimmedLine.toLowerCase().includes('youtu.be/')) {
+            let identifier = trimmedLine;
+            if (trimmedLine.toLowerCase().includes('youtube.com/c/ChannelName2') || trimmedLine.toLowerCase().includes('youtube.com/c/ChannelName3')) {
                 platform = 'youtube';
-                // Idealmente, aquí llamarías a una función más robusta de api_youtube.js para extraer el ID/handle
-                // Por ahora, pasamos la URL completa y dejamos que la función de API intente parsearla.
-                identifier = trimmedLine; 
             } else if (trimmedLine.toLowerCase().includes('facebook.com/')) {
                 platform = 'facebook';
-                // Similar para Facebook, pasar la URL para que la API la parsee.
-                identifier = trimmedLine;
             }
-            // Podrías añadir más 'else if' para otras plataformas como Twitch
-
-            inputs.push({
-                platform: platform,
-                identifier: identifier, // Este es el ID/URL/Handle que se pasará a la función de API
-                originalInput: trimmedLine // Guardar la línea original para mostrar si es necesario
-            });
+            inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
+        console.log("app.js: parseInputLines() completado. Entradas:", inputs);
         return inputs;
     }
 
-    /**
-     * Procesa la verificación de estado para un solo stream y actualiza la UI.
-     * @param {object} streamToUpdate - El objeto de stream de monitoredStreams.
-     * @param {number} index - El índice del stream en monitoredStreams para actualizarlo.
-     */
     async function processStreamCheck(streamToUpdate, index) {
+        console.log(`app.js: processStreamCheck() para [${index}] ${streamToUpdate.identifier} (${streamToUpdate.platform})`);
         let streamApiFunction;
+        let platformKey = streamToUpdate.platform.toLowerCase();
 
-        switch (streamToUpdate.platform.toLowerCase()) {
+        switch (platformKey) {
             case 'youtube':
-                streamApiFunction = window.getYouTubeStreamStatus; // Asume que está global o importada
+                streamApiFunction = typeof getYouTubeStreamStatus === 'function' ? getYouTubeStreamStatus : window.getYouTubeStreamStatus;
                 break;
             case 'facebook':
-                streamApiFunction = window.getFacebookStreamStatus; // Asume que está global o importada
+                streamApiFunction = typeof getFacebookStreamStatus === 'function' ? getFacebookStreamStatus : window.getFacebookStreamStatus;
                 break;
-            // case 'twitch': streamApiFunction = window.getTwitchStreamStatus; break;
             default:
-                console.warn(`Plataforma no soportada para: ${streamToUpdate.identifier}`);
-                const unsupportedInfo = {
-                    ...streamToUpdate,
-                    status: 'No Soportado',
-                    lastCheck: new Date().toLocaleTimeString()
-                };
+                console.warn(`app.js: Plataforma no soportada: ${streamToUpdate.platform} para ${streamToUpdate.identifier}`);
+                const unsupportedInfo = { ...streamToUpdate, status: 'No Soportado', lastCheck: new Date().toLocaleTimeString() };
                 monitoredStreams[index] = unsupportedInfo;
-                ui.updateStreamRow(unsupportedInfo);
+                if (typeof ui !== 'undefined') ui.updateStreamRow(unsupportedInfo);
                 return;
         }
 
         if (typeof streamApiFunction !== 'function') {
-            console.error(`Función API no definida para la plataforma: ${streamToUpdate.platform}`);
+            console.error(`app.js: Función API no definida o no es una función para la plataforma: ${streamToUpdate.platform}. ¿Se cargó api_${platformKey}.js?`);
             const errorInfo = { ...streamToUpdate, status: 'Error Config.', lastCheck: new Date().toLocaleTimeString() };
             monitoredStreams[index] = errorInfo;
-            ui.updateStreamRow(errorInfo);
+            if (typeof ui !== 'undefined') ui.updateStreamRow(errorInfo);
             return;
         }
         
         try {
-            // La función de API debería tomar el 'identifier' (que es la URL o ID crudo)
-            // y devolver el objeto streamInfo completo, incluyendo el 'name' parseado.
-            const updatedStreamInfo = await streamApiFunction(streamToUpdate.identifier); 
-            
-            // Combinar/actualizar la información en nuestro array `monitoredStreams`
-            // La función de API ya debería devolver el objeto con 'platform' y el 'identifier' original o procesado.
+            const updatedStreamInfoFromApi = await streamApiFunction(streamToUpdate.identifier);
             monitoredStreams[index] = {
-                ...streamToUpdate, // Mantener información original si es necesario
-                ...updatedStreamInfo, // Sobrescribir con la data fresca de la API
-                lastCheck: new Date().toLocaleTimeString() // Asegurar que la hora de chequeo es la actual
+                ...streamToUpdate, // Mantiene el originalInput y cualquier otra info base
+                ...updatedStreamInfoFromApi, // Sobrescribe con la data fresca (name, status, title, etc.)
+                identifier: updatedStreamInfoFromApi.identifier || streamToUpdate.identifier, // Asegurar que el identifier se mantenga o actualice
+                platform: updatedStreamInfoFromApi.platform || streamToUpdate.platform, // Asegurar que la plataforma se mantenga
+                lastCheck: new Date().toLocaleTimeString()
             };
-            ui.updateStreamRow(monitoredStreams[index]);
+            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].identifier}:`, monitoredStreams[index]);
+            if (typeof ui !== 'undefined') ui.updateStreamRow(monitoredStreams[index]);
         } catch (error) {
-            console.error(`Error al verificar stream ${streamToUpdate.identifier}:`, error);
-            const errorInfo = { ...streamToUpdate, status: 'Error API', lastCheck: new Date().toLocaleTimeString() };
+            console.error(`app.js: Error en API call para ${streamToUpdate.identifier}:`, error);
+            const errorInfo = { ...streamToUpdate, status: 'Error API', lastCheck: new Date().toLocaleTimeString(), details: error.message };
             monitoredStreams[index] = errorInfo;
-            ui.updateStreamRow(errorInfo);
+            if (typeof ui !== 'undefined') ui.updateStreamRow(errorInfo);
         }
     }
 
-    /**
-     * Verifica el estado de todos los streams monitoreados.
-     */
     async function checkAllStreams() {
+        console.log("app.js: checkAllStreams() llamado.");
         if (monitoredStreams.length === 0) {
-            // console.log('No hay streams para verificar en el refresco.');
-            // ui.showNoStreamsMessage(true); // Opcional: si la tabla está vacía, mostrar mensaje
+            console.log("app.js: No hay streams para verificar en checkAllStreams.");
+            if (typeof ui !== 'undefined') ui.showNoStreamsMessage(true);
             return;
         }
-
-        ui.showLoadingIndicator(true);
-        // console.log('Iniciando refresco de todos los streams...');
-        // Usar Promise.all para ejecutar todas las verificaciones en "paralelo" (concurrente)
-        // Mapeamos cada stream a la promesa de su verificación
+        if (typeof ui !== 'undefined') ui.showLoadingIndicator(true);
+        
         const promises = monitoredStreams.map((stream, index) => processStreamCheck(stream, index));
         
         try {
             await Promise.all(promises);
-            // console.log('Todos los streams han sido verificados.');
+            console.log("app.js: Todas las promesas de processStreamCheck resueltas.");
         } catch (error) {
-            // Aunque processStreamCheck ya maneja errores individuales,
-            // Promise.all podría fallar si una promesa es rechazada y no se maneja internamente.
-            console.error("Ocurrió un error durante la verificación de todos los streams:", error);
-            ui.showAppMessage('Algunas verificaciones fallaron durante el refresco.', 'warning');
+            console.error("app.js: Error durante Promise.all en checkAllStreams:", error);
+            if (typeof ui !== 'undefined') ui.showAppMessage('Algunas verificaciones fallaron durante el refresco.', 'warning');
         } finally {
-            ui.showLoadingIndicator(false);
-            ui.updateGlobalLastCheckTime(new Date().toLocaleTimeString());
+            if (typeof ui !== 'undefined') {
+                ui.showLoadingIndicator(false);
+                ui.updateGlobalLastCheckTime(new Date().toLocaleTimeString());
+            }
+            console.log("app.js: checkAllStreams() finalizado.");
         }
     }
 
     // --- Iniciar la Aplicación ---
     initializeApp();
+    console.log("app.js: initializeApp() ha sido invocada.");
 });
+
+console.log("app.js: Script finalizado (parseo inicial completo por el navegador). Esperando DOMContentLoaded.");
