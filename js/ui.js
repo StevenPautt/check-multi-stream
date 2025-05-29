@@ -197,16 +197,6 @@ function showAppMessage(message, type = 'info', duration = 5000) {
 }
 
 /**
- * Actualiza el texto que muestra el nombre del archivo seleccionado.
- * @param {string} fileName - El nombre del archivo. Si es null o vacío, muestra mensaje por defecto.
- */
-function updateFileNameDisplay(fileName) {
-    if (fileNameDisplay) {
-        fileNameDisplay.textContent = fileName || 'Ningún archivo seleccionado';
-    }
-}
-
-/**
  * Actualiza el texto de la "Última Verificación Global".
  * @param {string} timeString - La cadena de tiempo a mostrar.
  */

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="light"> <head>
+<html lang="es" data-bs-theme="light">
+<head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,21 +39,20 @@
                  <div id="appMessage" class="alert d-none" role="alert">
                     </div>
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-6">
-                        <label for="fileInputControl" class="form-label">Cargar archivo (URLs/IDs de canal de YouTube, Facebook, etc.):</label>
-                        <div class="input-group">
-                            <label for="fileInputControl" class="btn btn-secondary btn-file-input">
-                                <i class="bi bi-cloud-arrow-up me-1"></i> Seleccionar archivo...
-                            </label>
-                            <input type="file" id="fileInputControl" class="d-none"> <span id="fileNameDisplay" class="form-control file-name-display-field" readonly>Ningún archivo seleccionado</span>
-                        </div>
+                    <div class="col-md-9"> <label for="urlInputArea" class="form-label">Pegar URLs (una por línea):</label>
+                        <textarea id="urlInputArea" class="form-control" rows="5" placeholder="Ej:
+youtube.com/c/NombrePersonalizado2
+https://www.twitch.tv/nombrecanal
+https://kick.com/nombrekick
+https://www.facebook.com/nombrepagina"></textarea>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100" id="checkStreamsButton">
-                            <i class="bi bi-play-btn me-1"></i> Verificar Streams
+                        <button class="btn btn-primary w-100 mt-auto" id="checkStreamsButton"> <i class="bi bi-play-btn me-1"></i> Verificar URLs
                         </button>
                     </div>
-                     <div class="col-md-3 text-md-end">
+                </div>
+                <div class="row mt-3">
+                     <div class="col text-md-end">
                         <small class="text-muted global-last-check-label">Última Verificación Global: <span id="globalLastCheckTime">-</span></small>
                     </div>
                 </div>
@@ -75,24 +75,28 @@
                                 <th>Identificador/Nombre</th>
                                 <th>Estado</th>
                                 <th>Última Verificación</th>
-                                </tr>
+                            </tr>
                         </thead>
                         <tbody id="streamResultsBody" class="table-group-divider">
                             </tbody>
                     </table>
-                     <p id="noStreamsMessage" class="text-center text-muted mt-3 d-none">No hay streams para mostrar. Carga un archivo para comenzar.</p>
+                     <p id="noStreamsMessage" class="text-center text-muted mt-3 d-none">No hay streams para mostrar. Ingresa algunas URLs para comenzar.</p>
                 </div>
             </div>
         </section>
     </main>
 
     <footer class="app-footer mt-5 py-3 text-center">
-        <small class="text-muted">&copy; 2025 Check Multi-Stream. Todos los derechos reservados (o tu info).</small>
+        <small class="text-muted">&copy; 2025 Check Multi-Stream. Todos los derechos reservados.</small>
     </footer>
 
     <script src="js/theme.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/api_youtube.js"></script>
+    <script src="js/api_facebook.js"></script>
+    <script src="js/api_twitch.js"></script>
+    <script src="js/api_kick.js"></script>
     <script src="js/app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
