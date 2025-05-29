@@ -63,8 +63,8 @@
 [data-theme="dark"] {
     /* Tema Oscuro Fénix */
     --bg-color: #1A1A1D;                  
-    --text-color: #EAEAEA;                
-    --text-muted-color: #888E93; 
+    --text-color: #acacac;                
+    --text-muted-color: #000000; 
     --card-bg-color: #23272A;             
     --card-border-color: #3A3F42;         
     --header-bg-color: #0D0D0D;           
