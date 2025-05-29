@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile = null;
     let monitoredStreams = [];
     let refreshIntervalId = null;
-    const REFRESH_INTERVAL_MS = 60000 * 2;
+    const REFRESH_INTERVAL_MS = 60000 * 2; // Refrescar cada 2 minutos
     console.log("app.js: Variables de estado inicializadas.");
 
     // --- Inicialización ---
@@ -117,9 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const fileContent = await selectedFile.text();
-            console.log("app.js: Contenido del archivo leído (primeros 200 caracteres):", fileContent.substring(0,200)); // Log del contenido
-            const parsedInputs = parseInputLines(fileContent);
-            console.log("app.js: Entradas parseadas del archivo:", parsedInputs);
+            console.log("app.js: Contenido del archivo leído (primeros 200 caracteres):", fileContent.substring(0,200));
+            const parsedInputs = parseInputLines(fileContent); // ESTA ES LA FUNCIÓN CON MÁS DEBUGGING
+            console.log("app.js: Entradas parseadas del archivo (después de llamar a parseInputLines):", JSON.parse(JSON.stringify(parsedInputs))); // Para asegurar que se loguea el valor actual
 
             if (parsedInputs.length === 0) {
                 console.warn("app.js: El archivo no contiene entradas válidas o está vacío.");
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 console.log(`DEBUG: Línea ${index + 1} trimmedLine - Últimos 5 chars: ${charDetails.trim()}`);
             }
-            
+
             const lowerLine = trimmedLine.toLowerCase();
             console.log(`DEBUG: Línea ${index + 1} (después de toLowerCase()): [${lowerLine}] (Longitud: ${lowerLine.length})`);
 
@@ -206,27 +206,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 console.log(`DEBUG: Línea ${index + 1} lowerLine - Últimos 5 chars: ${charDetailsLower.trim()}`);
             }
-            
+
             // Verificación crítica de la transformación
             // Compara la versión trimeada con la versión en minúsculas para ver si toLowerCase cambió algo inesperado
-            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") && 
+            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") &&
                 trimmedLine.length === lowerLine.length) { // Solo si no son solo diferencias de caso
                 let diffFound = false;
                 for(let i=0; i<trimmedLine.length; i++) {
-                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) && 
+                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) &&
                        !(trimmedLine[i] >= 'A' && trimmedLine[i] <= 'Z' && lowerLine[i] === trimmedLine[i].toLowerCase())) {
                         diffFound = true;
                         break;
                        }
                 }
                 if(diffFound) {
-                     console.error(`¡¡¡ALERTA DEBUG!!! toLowerCase() PARECE HABER CAMBIADO CARACTERES NO ALBfabéticos: "${trimmedLine}" -> "${lowerLine}"`);
+                     console.error(`¡¡¡ALERTA DEBUG!!! toLowerCase() PARECE HABER CAMBIADO CARACTERES NO ALFABÉTICOS: "${trimmedLine}" -> "${lowerLine}"`);
                 }
             }
 
 
             let platform = 'unknown';
-            let identifier = trimmedLine; 
+            let identifier = trimmedLine;
 
             const includesYouTubeDomain = lowerLine.includes('youtube.com/c/ChannelName7');
             const includesYouTubeShortDomain = lowerLine.includes('youtu.be/');
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (includesFacebook) {
                 platform = 'facebook';
             }
-            
+
             console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
             inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 platform: updatedStreamInfoFromApi.platform || streamToUpdate.platform,
                 lastCheck: new Date().toLocaleTimeString()
             };
-            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].identifier}:`, monitoredStreams[index]);
+            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].identifier}:`, JSON.parse(JSON.stringify(monitoredStreams[index]))); // Asegurar logueo
             if (typeof updateStreamRow === 'function') updateStreamRow(monitoredStreams[index]);
         } catch (error) {
             console.error(`app.js: Error en API call para ${streamToUpdate.identifier}:`, error);
