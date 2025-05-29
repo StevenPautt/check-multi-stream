@@ -175,42 +175,68 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputs = [];
         lines.forEach((line, index) => {
             const originalLineFromFile = line;
-            const trimmedLine = line.trim(); 
+            let trimmedLine = line.trim(); // Eliminar espacios al inicio y al final
 
             console.log(`DEBUG: Línea ${index + 1} (original del archivo): [${originalLineFromFile}] (Longitud: ${originalLineFromFile.length})`);
             console.log(`DEBUG: Línea ${index + 1} (después de trim()):     [${trimmedLine}] (Longitud: ${trimmedLine.length})`);
+
+            // Intento de "sanitizar" la línea aún más, quitando caracteres no ASCII comunes > 127
+            // Esto es una medida drástica para ver si hay algo invisible.
+            let sanitizedTrimmedLine = "";
+            for (let i = 0; i < trimmedLine.length; i++) {
+                if (trimmedLine.charCodeAt(i) < 128) { // Solo caracteres ASCII básicos
+                    sanitizedTrimmedLine += trimmedLine[i];
+                }
+            }
+            if (trimmedLine !== sanitizedTrimmedLine) {
+                console.warn(`DEBUG: Línea ${index + 1} PARECÍA tener caracteres no ASCII básicos. Sanitizada de [${trimmedLine}] a [${sanitizedTrimmedLine}]`);
+                trimmedLine = sanitizedTrimmedLine; // Usar la versión sanitizada
+                console.log(`DEBUG: Línea ${index + 1} (después de sanitizar y trim()): [${trimmedLine}] (Longitud: ${trimmedLine.length})`);
+            }
+
 
             if (trimmedLine === '' || trimmedLine.startsWith('#')) {
                 console.log(`DEBUG: Línea ${index + 1} ignorada (vacía o comentario).`);
                 return;
             }
 
+            // Log de los códigos de caracteres y hexadecimal de la parte final de trimmedLine
             if (trimmedLine.length > 0) {
-                const lastChars = trimmedLine.slice(-5); 
+                const lastChars = trimmedLine.slice(-5);
                 let charDetails = "";
+                let hexDetails = "";
                 for (let i = 0; i < lastChars.length; i++) {
-                    charDetails += `'${lastChars[i]}' (código: ${lastChars[i].charCodeAt(0)}) `;
+                    const char = lastChars[i];
+                    const charCode = char.charCodeAt(0);
+                    charDetails += `'${char}' (código: ${charCode}) `;
+                    hexDetails += `${charCode.toString(16).padStart(2, '0')} `; // Convertir a hexadecimal
                 }
                 console.log(`DEBUG: Línea ${index + 1} trimmedLine - Últimos 5 chars: ${charDetails.trim()}`);
+                console.log(`DEBUG: Línea ${index + 1} trimmedLine - Hex de Últimos 5 chars: [${hexDetails.trim()}]`);
             }
-            
+
             const lowerLine = trimmedLine.toLowerCase();
             console.log(`DEBUG: Línea ${index + 1} (después de toLowerCase()): [${lowerLine}] (Longitud: ${lowerLine.length})`);
 
             if (trimmedLine.length > 0 && lowerLine.length > 0) {
-                const lastCharsLower = lowerLine.slice(-5); 
+                const lastCharsLower = lowerLine.slice(-5);
                 let charDetailsLower = "";
+                let hexDetailsLower = "";
                 for (let i = 0; i < lastCharsLower.length; i++) {
-                    charDetailsLower += `'${lastCharsLower[i]}' (código: ${lastCharsLower[i].charCodeAt(0)}) `;
+                    const char = lastCharsLower[i];
+                    const charCode = char.charCodeAt(0);
+                    charDetailsLower += `'${char}' (código: ${charCode}) `;
+                    hexDetailsLower += `${charCode.toString(16).padStart(2, '0')} `;
                 }
                 console.log(`DEBUG: Línea ${index + 1} lowerLine - Últimos 5 chars: ${charDetailsLower.trim()}`);
+                console.log(`DEBUG: Línea ${index + 1} lowerLine - Hex de Últimos 5 chars: [${hexDetailsLower.trim()}]`);
             }
-            
-            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") && 
-                trimmedLine.length === lowerLine.length) { 
+
+            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") &&
+                trimmedLine.length === lowerLine.length) {
                 let diffFound = false;
                 for(let i=0; i<trimmedLine.length; i++) {
-                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) && 
+                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) &&
                        !(trimmedLine[i] >= 'A' && trimmedLine[i] <= 'Z' && lowerLine[i] === trimmedLine[i].toLowerCase())) {
                         diffFound = true;
                         break;
@@ -222,10 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let platform = 'unknown';
-            let identifier = trimmedLine; 
+            let identifier = trimmedLine;
 
-            // Detección de Plataforma actualizada
-            const includesYouTube = lowerLine.includes('youtube.com/c/ChannelName6') || lowerLine.includes('youtu.be/'); // Cambio clave aquí
+            const includesYouTube = lowerLine.includes('youtube.com/c/ChannelName6') || lowerLine.includes('youtu.be/');
             const includesTwitch = lowerLine.includes('twitch.tv/');
             const includesKick = lowerLine.includes('kick.com/');
             const includesFacebook = lowerLine.includes('facebook.com/');
@@ -236,12 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 platform = 'twitch';
             } else if (includesKick) {
                 platform = 'kick';
-            } else if (includesYouTube) { // Simplificado de (includesYouTubeDomain || includesYouTubeShortDomain)
+            } else if (includesYouTube) {
                 platform = 'youtube';
             } else if (includesFacebook) {
                 platform = 'facebook';
             }
-            
+
             console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
             inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
