@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("app.js: Usuario autenticado o la función isUserLoggedIn no está disponible. Continuando...");
 
-
     // --- Selectores de Elementos del DOM ---
     const urlInputArea = document.getElementById('urlInputArea');
     const checkStreamsButton = document.getElementById('checkStreamsButton');
@@ -74,10 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("app.js: setupEventListeners() completado.");
     }
 
-
     async function handleCheckStreams() {
         console.log("app.js: handleCheckStreams() llamado.");
-        
+
         if (!urlInputArea) {
             console.error("app.js: Elemento urlInputArea no encontrado.");
             if (typeof showAppMessage === 'function') {
@@ -86,9 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const textContent = urlInputArea.value; // No hacer trim() aquí, parseInputLines lo hará por línea
+        const textContent = urlInputArea.value;
 
-        if (!textContent.trim()) { // Verificar si después de trim general, está vacío
+        if (!textContent.trim()) {
             console.warn("app.js: Intento de verificar streams sin URLs en el área de texto.");
             if (typeof showAppMessage === 'function') {
                 showAppMessage('Por favor, pega algunas URLs en el área de texto primero.', 'warning');
@@ -102,12 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("app.js: Tabla limpiada y streams monitoreados reseteados.");
 
         try {
-            console.log("app.js: Contenido del área de texto (primeros 200 caracteres):", textContent.substring(0,200));
+            console.log("app.js: Contenido del área de texto (primeros 200 caracteres):", textContent.substring(0, 200));
             const parsedInputs = parseInputLines(textContent);
-            console.log("app.js: Entradas parseadas del área de texto (después de llamar a parseInputLines):", JSON.parse(JSON.stringify(parsedInputs)));
+            console.log("app.js: Entradas parseadas:", parsedInputs);
 
             if (parsedInputs.length === 0) {
-                console.warn("app.js: El área de texto no contiene entradas válidas o está vacía después de parsear.");
+                console.warn("app.js: No se encontraron entradas válidas.");
                 if (typeof showAppMessage === 'function') showAppMessage('No se encontraron URLs válidas en el texto ingresado.', 'warning');
                 if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true);
                 return;
@@ -118,31 +116,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             parsedInputs.forEach(input => {
-                const initialStreamInfo = {
+                const streamInfo = { // Cambiado de initialStreamInfo para consistencia con tu código
                     platform: input.platform || 'unknown',
-                    identifier: input.identifier, // Este será el identificador limpio
-                    name: input.originalInput,   // Este es el input original trimeado de la línea
+                    identifier: input.identifier,
+                    name: input.originalInput,
                     status: 'Pendiente...',
                     lastCheck: '-'
                 };
-                monitoredStreams.push(initialStreamInfo);
+                monitoredStreams.push(streamInfo);
                 if (typeof addStreamToTable === 'function') {
-                    addStreamToTable(initialStreamInfo);
+                    addStreamToTable(streamInfo);
                 }
             });
-            console.log("app.js: Streams iniciales añadidos a la tabla y a monitoredStreams.");
 
-            await checkAllStreams();
-            console.log("app.js: Primera verificación de todos los streams completada.");
+            console.log("app.js: Streams añadidos a la tabla."); // Cambiado de "Streams iniciales añadidos..."
 
-            if (refreshIntervalId) {
-                clearInterval(refreshIntervalId);
-            }
+            await checkAllStreams(); // Esta llamada ahora debería funcionar
+            console.log("app.js: Verificación inicial completa."); // Cambiado de "Primera verificación..."
+
+            if (refreshIntervalId) clearInterval(refreshIntervalId);
             refreshIntervalId = setInterval(checkAllStreams, REFRESH_INTERVAL_MS);
-            console.log("app.js: Intervalo de refresco configurado cada", REFRESH_INTERVAL_MS, "ms.");
+            console.log("app.js: Intervalo de refresco iniciado."); // Cambiado de "Intervalo de refresco configurado..."
 
         } catch (error) {
-            console.error('app.js: Error procesando el contenido del área de texto en handleCheckStreams:', error);
+            console.error("app.js: Error procesando streams:", error); // Cambiado de "Error procesando el contenido..."
             if (typeof showAppMessage === 'function') {
                 showAppMessage('Error al procesar las URLs ingresadas.', 'danger');
             }
@@ -153,97 +150,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Lógica de Parseo y Verificación de Streams ---
+    // --- Tu función parseInputLines modificada ---
     function parseInputLines(textContent) {
         console.log("app.js: parseInputLines() INICIO.");
         const lines = textContent.split(/\r?\n/);
         const inputs = [];
+
         lines.forEach((line, index) => {
-            const originalLineFromTextarea = line;
-            let processedLine = line.trim(); 
-
-            console.log(`DEBUG: Línea ${index + 1} (original): [${originalLineFromTextarea}] (Longitud: ${originalLineFromTextarea.length})`);
-            console.log(`DEBUG: Línea ${index + 1} (después de trim()): [${processedLine}] (Longitud: ${processedLine.length})`);
-            
-            // --- INICIO DE LIMPIEZA AGRESIVA ---
-            // Intento 1: Eliminar si termina con "[Object Object]" (común al copiar de consolas)
-            const objectObjectString = "[Object Object]";
-            if (processedLine.endsWith(objectObjectString)) {
-                console.warn(`DEBUG: Línea ${index + 1} - Se detectó "${objectObjectString}" al final. Limpiando.`);
-                processedLine = processedLine.substring(0, processedLine.length - objectObjectString.length).trim();
-                console.log(`DEBUG: Línea ${index + 1} (después de limpiar "${objectObjectString}"): [${processedLine}] (Longitud: ${processedLine.length})`);
+            let processedLine = line.trim();
+            if (processedLine.endsWith('[Object Object]')) {
+                processedLine = processedLine.slice(0, -15).trim();
             }
 
-            // Intento 2: Quedarse solo con la primera "palabra" si parece una URL y hay espacios después
-            // Esto asume que la URL es lo primero en la línea.
-            const parts = processedLine.split(/\s+/); // Dividir por uno o más espacios
-            if (parts.length > 0 && (parts[0].toLowerCase().startsWith('http://') || parts[0].toLowerCase().startsWith('https://'))) {
-                if (parts.length > 1) {
-                     console.warn(`DEBUG: Línea ${index + 1} - Espacios detectados después de la URL inicial. Usando solo la primera parte: "${parts[0]}"`);
-                }
-                processedLine = parts[0]; // Tomar solo la primera parte (la URL)
-                 console.log(`DEBUG: Línea ${index + 1} (después de tomar primera parte si hay espacios): [${processedLine}] (Longitud: ${processedLine.length})`);
-            }
-            // --- FIN DE LIMPIEZA AGRESIVA ---
-
-            const finalLineToProcess = processedLine;
-
-            if (finalLineToProcess === '' || finalLineToProcess.startsWith('#')) {
-                console.log(`DEBUG: Línea ${index + 1} ignorada (vacía o comentario).`);
-                return;
+            const parts = processedLine.split(/\s+/);
+            if (parts.length > 1 && parts[0].startsWith('http')) {
+                processedLine = parts[0];
             }
 
-            if (finalLineToProcess.length > 0) {
-                const lastChars = finalLineToProcess.slice(-5); 
-                let charDetails = "";
-                for (let i = 0; i < lastChars.length; i++) {
-                    charDetails += `'${lastChars[i]}' (código: ${lastChars[i].charCodeAt(0)}) `;
-                }
-                console.log(`DEBUG: Línea ${index + 1} finalLineToProcess - Últimos 5 chars: ${charDetails.trim()}`);
+            if (processedLine === '' || processedLine.startsWith('#')) {
+                return; // Salta esta iteración del bucle forEach
             }
-            
-            const lowerLine = finalLineToProcess.toLowerCase();
-            console.log(`DEBUG: Línea ${index + 1} (lowerLine, basada en finalLineToProcess): [${lowerLine}] (Longitud: ${lowerLine.length})`);
 
-            if (finalLineToProcess.length > 0 && lowerLine.length > 0) {
-                const lastCharsLower = lowerLine.slice(-5); 
-                let charDetailsLower = "";
-                for (let i = 0; i < lastCharsLower.length; i++) {
-                    charDetailsLower += `'${lastCharsLower[i]}' (código: ${lastCharsLower[i].charCodeAt(0)}) `;
-                }
-                console.log(`DEBUG: Línea ${index + 1} lowerLine - Últimos 5 chars: ${charDetailsLower.trim()}`);
-            }
-            
+            const lowerLine = processedLine.toLowerCase();
             let platform = 'unknown';
-            // Usar finalLineToProcess para el identificador que se pasará a las APIs
-            let identifierForApi = finalLineToProcess; 
 
-            const includesYouTube = lowerLine.includes('youtube.com/c/ChannelName6') || lowerLine.includes('youtu.be/');
-            const includesTwitch = lowerLine.includes('twitch.tv/');
-            const includesKick = lowerLine.includes('kick.com/');
-            const includesFacebook = lowerLine.includes('facebook.com/');
+            // Tu lógica de detección de plataformas que te funciona:
+            if (lowerLine.includes('twitch.tv/')) platform = 'twitch';
+            else if (lowerLine.includes('youtube.com/') || lowerLine.includes('youtu.be/')) platform = 'youtube';
+            else if (lowerLine.includes('kick.com/')) platform = 'kick';
+            else if (lowerLine.includes('facebook.com/')) platform = 'facebook';
 
-            console.log(`DEBUG: Línea ${index + 1} - Resultados de .includes(): YouTube=${includesYouTube}, Twitch=${includesTwitch}, Kick=${includesKick}, Facebook=${includesFacebook}`);
-
-            if (includesTwitch) {
-                platform = 'twitch';
-            } else if (includesKick) {
-                platform = 'kick';
-            } else if (includesYouTube) { 
-                platform = 'youtube';
-            } else if (includesFacebook) {
-                platform = 'facebook';
-            }
-            
-            console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
-            // Guardar el originalInput trimeado (antes de la limpieza agresiva) para mostrarlo,
-            // pero usar el identifierForApi (finalLineToProcess) para las llamadas a API.
-            inputs.push({ platform, identifier: identifierForApi, originalInput: line.trim() });
+            inputs.push({
+                originalInput: processedLine, // Usar processedLine que es la URL limpia
+                identifier: processedLine,    // Usar processedLine que es la URL limpia
+                platform: platform
+            });
         });
-        console.log("app.js: parseInputLines() FIN. Entradas detectadas:", JSON.parse(JSON.stringify(inputs)));
+
+        console.log("app.js: parseInputLines() FIN.");
         return inputs;
     }
 
+    // --- FUNCIONES REINSERTADAS ---
     async function processStreamCheck(streamToUpdate, index) {
         console.log(`app.js: processStreamCheck() para [${index}] (ID para API: ${streamToUpdate.identifier}, Mostrado: ${streamToUpdate.name}) (${streamToUpdate.platform})`);
         let streamApiFunction;
@@ -279,19 +227,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Pasamos el 'identifier' que es la URL limpia a la función de API
             const updatedStreamInfoFromApi = await streamApiFunction(streamToUpdate.identifier); 
 
             monitoredStreams[index] = {
-                ...streamToUpdate, // Mantiene el originalInput (name)
-                ...updatedStreamInfoFromApi, // Sobrescribe con la data fresca (status, title, etc.)
-                                             // y puede refinar 'name' y 'identifier' si la API lo hace.
+                ...streamToUpdate, 
+                ...updatedStreamInfoFromApi, 
                 identifier: updatedStreamInfoFromApi.identifier || streamToUpdate.identifier,
                 platform: updatedStreamInfoFromApi.platform || streamToUpdate.platform,
+                name: updatedStreamInfoFromApi.name || streamToUpdate.name, // Asegurar que el nombre se actualice si la API lo provee
                 lastCheck: new Date().toLocaleTimeString()
             };
-            // Si la API no devuelve 'name', el 'name' original (que es originalInput) se mantendrá.
-            // Es importante que updatedStreamInfoFromApi devuelva un 'name' si lo puede determinar mejor.
             console.log(`app.js: Respuesta de API para ${monitoredStreams[index].name}:`, JSON.parse(JSON.stringify(monitoredStreams[index])));
             if (typeof updateStreamRow === 'function') updateStreamRow(monitoredStreams[index]);
         } catch (error) {
@@ -325,10 +270,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("app.js: checkAllStreams() finalizado.");
         }
     }
+    // --- FIN DE FUNCIONES REINSERTADAS ---
 
-    // --- Iniciar la Aplicación ---
+    // Iniciar la app
     initializeApp();
-    console.log("app.js: initializeApp() ha sido invocada al final de DOMContentLoaded.");
 });
 
-console.log("app.js: Script finalizado (parseo inicial completo por el navegador). Esperando DOMContentLoaded.");
+// AL FINAL DE js/app.js
+console.log("app.js: Script finalizado (parseo inicial completo por el navegador). Esperando DOMContentLoaded."); // Movido aquí

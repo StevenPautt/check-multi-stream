@@ -10,7 +10,7 @@
 // DEBERÍAS OBTENER ESTA CLAVE DESDE GOOGLE CLOUD CONSOLE Y GESTIONARLA DE FORMA SEGURA.
 // Para pruebas iniciales, puedes ponerla aquí, pero NUNCA la subas a un repositorio público.
 // Considera restringir la clave API a tus dominios específicos.
-const YOUTUBE_API_KEY = 'TU_YOUTUBE_API_KEY_AQUI';
+const YOUTUBE_API_KEY = 'AIzaSyDbK-imV7m7JGs3bWlij7ovM4FpyN9Zpxg';
 
 /**
  * Extrae el ID de un canal de YouTube desde una URL.
