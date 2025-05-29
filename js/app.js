@@ -174,44 +174,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = textContent.split(/\r?\n/);
         const inputs = [];
         lines.forEach((line, index) => {
-            const originalLineFromFile = line; // Guardar la línea original antes de trim()
-            const trimmedLine = line.trim();
-            
-            console.log(`DEBUG: Línea ${index + 1} (original del archivo): [${originalLineFromFile}]`);
-            console.log(`DEBUG: Línea ${index + 1} (después de trim()):     [${trimmedLine}]`);
+            const originalLineFromFile = line;
+            const trimmedLine = line.trim(); // Eliminar espacios al inicio y al final
+
+            console.log(`DEBUG: Línea ${index + 1} (original del archivo): [${originalLineFromFile}] (Longitud: ${originalLineFromFile.length})`);
+            console.log(`DEBUG: Línea ${index + 1} (después de trim()):     [${trimmedLine}] (Longitud: ${trimmedLine.length})`);
+
+            if (trimmedLine === '' || trimmedLine.startsWith('#')) {
+                console.log(`DEBUG: Línea ${index + 1} ignorada (vacía o comentario).`);
+                return;
+            }
 
             // Log de los códigos de caracteres de la parte final de trimmedLine
             if (trimmedLine.length > 0) {
-                const lastChar = trimmedLine.slice(-1);
-                const secondLastChar = trimmedLine.length > 1 ? trimmedLine.slice(-2, -1) : "";
-                console.log(`DEBUG: Línea ${index + 1} trimmedLine - Último char: '${lastChar}' (código: ${lastChar.charCodeAt(0)}), Penúltimo: '${secondLastChar}' (código: ${secondLastChar ? secondLastChar.charCodeAt(0) : 'N/A'})`);
-            }
-
-            if (trimmedLine === '' || trimmedLine.startsWith('#')) {
-                console.log(`app.js: Línea ${index + 1} ignorada (vacía o comentario).`);
-                return;
+                const lastChars = trimmedLine.slice(-5); // Obtener los últimos 5 caracteres
+                let charDetails = "";
+                for (let i = 0; i < lastChars.length; i++) {
+                    charDetails += `'${lastChars[i]}' (código: ${lastChars[i].charCodeAt(0)}) `;
+                }
+                console.log(`DEBUG: Línea ${index + 1} trimmedLine - Últimos 5 chars: ${charDetails.trim()}`);
             }
             
             const lowerLine = trimmedLine.toLowerCase();
-            console.log(`DEBUG: Línea ${index + 1} (después de toLowerCase()): [${lowerLine}]`);
+            console.log(`DEBUG: Línea ${index + 1} (después de toLowerCase()): [${lowerLine}] (Longitud: ${lowerLine.length})`);
 
-            // Log de los códigos de caracteres de la parte final de lowerLine
-            if (lowerLine.length > 0) {
-                const lastCharLower = lowerLine.slice(-1);
-                const secondLastCharLower = lowerLine.length > 1 ? lowerLine.slice(-2, -1) : "";
-                console.log(`DEBUG: Línea ${index + 1} lowerLine - Último char: '${lastCharLower}' (código: ${lastCharLower.charCodeAt(0)}), Penúltimo: '${secondLastCharLower}' (código: ${secondLastCharLower ? secondLastCharLower.charCodeAt(0) : 'N/A'})`);
+            if (trimmedLine.length > 0 && lowerLine.length > 0) {
+                const lastCharsLower = lowerLine.slice(-5); // Obtener los últimos 5 caracteres
+                let charDetailsLower = "";
+                for (let i = 0; i < lastCharsLower.length; i++) {
+                    charDetailsLower += `'${lastCharsLower[i]}' (código: ${lastCharsLower[i].charCodeAt(0)}) `;
+                }
+                console.log(`DEBUG: Línea ${index + 1} lowerLine - Últimos 5 chars: ${charDetailsLower.trim()}`);
             }
-
+            
             // Verificación crítica de la transformación
-            if (trimmedLine === "https://www.youtube.com/@Korbion" && lowerLine !== "https://www.youtube.com/@Korbion") {
-                console.error(`¡¡¡ALERTA CRÍTICA DEBUG!!! toLowerCase() CAMBIÓ INESPERADAMENTE LA CADENA: "${trimmedLine}" -> "${lowerLine}"`);
+            // Compara la versión trimeada con la versión en minúsculas para ver si toLowerCase cambió algo inesperado
+            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") && 
+                trimmedLine.length === lowerLine.length) { // Solo si no son solo diferencias de caso
+                let diffFound = false;
+                for(let i=0; i<trimmedLine.length; i++) {
+                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) && 
+                       !(trimmedLine[i] >= 'A' && trimmedLine[i] <= 'Z' && lowerLine[i] === trimmedLine[i].toLowerCase())) {
+                        diffFound = true;
+                        break;
+                       }
+                }
+                if(diffFound) {
+                     console.error(`¡¡¡ALERTA DEBUG!!! toLowerCase() PARECE HABER CAMBIADO CARACTERES NO ALBfabéticos: "${trimmedLine}" -> "${lowerLine}"`);
+                }
             }
 
 
             let platform = 'unknown';
             let identifier = trimmedLine; 
 
-            // Detección de Plataforma
             const includesYouTubeDomain = lowerLine.includes('youtube.com/c/ChannelName7');
             const includesYouTubeShortDomain = lowerLine.includes('youtu.be/');
             const includesTwitch = lowerLine.includes('twitch.tv/');
@@ -233,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
             inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
-        console.log("app.js: parseInputLines() FIN. Entradas detectadas:", inputs);
+        console.log("app.js: parseInputLines() FIN. Entradas detectadas:", JSON.parse(JSON.stringify(inputs)));
         return inputs;
     }
 
