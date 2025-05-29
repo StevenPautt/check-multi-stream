@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile = null;
     let monitoredStreams = [];
     let refreshIntervalId = null;
-    const REFRESH_INTERVAL_MS = 60000 * 2; // Refrescar cada 2 minutos
+    const REFRESH_INTERVAL_MS = 60000 * 2;
     console.log("app.js: Variables de estado inicializadas.");
 
     // --- Inicialización ---
@@ -118,8 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const fileContent = await selectedFile.text();
             console.log("app.js: Contenido del archivo leído (primeros 200 caracteres):", fileContent.substring(0,200));
-            const parsedInputs = parseInputLines(fileContent); // ESTA ES LA FUNCIÓN CON MÁS DEBUGGING
-            console.log("app.js: Entradas parseadas del archivo (después de llamar a parseInputLines):", JSON.parse(JSON.stringify(parsedInputs))); // Para asegurar que se loguea el valor actual
+            const parsedInputs = parseInputLines(fileContent);
+            console.log("app.js: Entradas parseadas del archivo (después de llamar a parseInputLines):", JSON.parse(JSON.stringify(parsedInputs)));
 
             if (parsedInputs.length === 0) {
                 console.warn("app.js: El archivo no contiene entradas válidas o está vacío.");
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputs = [];
         lines.forEach((line, index) => {
             const originalLineFromFile = line;
-            const trimmedLine = line.trim(); // Eliminar espacios al inicio y al final
+            const trimmedLine = line.trim(); 
 
             console.log(`DEBUG: Línea ${index + 1} (original del archivo): [${originalLineFromFile}] (Longitud: ${originalLineFromFile.length})`);
             console.log(`DEBUG: Línea ${index + 1} (después de trim()):     [${trimmedLine}] (Longitud: ${trimmedLine.length})`);
@@ -185,35 +185,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Log de los códigos de caracteres de la parte final de trimmedLine
             if (trimmedLine.length > 0) {
-                const lastChars = trimmedLine.slice(-5); // Obtener los últimos 5 caracteres
+                const lastChars = trimmedLine.slice(-5); 
                 let charDetails = "";
                 for (let i = 0; i < lastChars.length; i++) {
                     charDetails += `'${lastChars[i]}' (código: ${lastChars[i].charCodeAt(0)}) `;
                 }
                 console.log(`DEBUG: Línea ${index + 1} trimmedLine - Últimos 5 chars: ${charDetails.trim()}`);
             }
-
+            
             const lowerLine = trimmedLine.toLowerCase();
             console.log(`DEBUG: Línea ${index + 1} (después de toLowerCase()): [${lowerLine}] (Longitud: ${lowerLine.length})`);
 
             if (trimmedLine.length > 0 && lowerLine.length > 0) {
-                const lastCharsLower = lowerLine.slice(-5); // Obtener los últimos 5 caracteres
+                const lastCharsLower = lowerLine.slice(-5); 
                 let charDetailsLower = "";
                 for (let i = 0; i < lastCharsLower.length; i++) {
                     charDetailsLower += `'${lastCharsLower[i]}' (código: ${lastCharsLower[i].charCodeAt(0)}) `;
                 }
                 console.log(`DEBUG: Línea ${index + 1} lowerLine - Últimos 5 chars: ${charDetailsLower.trim()}`);
             }
-
-            // Verificación crítica de la transformación
-            // Compara la versión trimeada con la versión en minúsculas para ver si toLowerCase cambió algo inesperado
-            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") &&
-                trimmedLine.length === lowerLine.length) { // Solo si no son solo diferencias de caso
+            
+            if (trimmedLine.replace(/[^a-zA-Z0-9]/g, "") !== lowerLine.replace(/[^a-zA-Z0-9]/g, "") && 
+                trimmedLine.length === lowerLine.length) { 
                 let diffFound = false;
                 for(let i=0; i<trimmedLine.length; i++) {
-                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) &&
+                    if(trimmedLine.charCodeAt(i) !== lowerLine.charCodeAt(i) && 
                        !(trimmedLine[i] >= 'A' && trimmedLine[i] <= 'Z' && lowerLine[i] === trimmedLine[i].toLowerCase())) {
                         diffFound = true;
                         break;
@@ -224,28 +221,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-
             let platform = 'unknown';
-            let identifier = trimmedLine;
+            let identifier = trimmedLine; 
 
-            const includesYouTubeDomain = lowerLine.includes('youtube.com/c/ChannelName7');
-            const includesYouTubeShortDomain = lowerLine.includes('youtu.be/');
+            // Detección de Plataforma actualizada
+            const includesYouTube = lowerLine.includes('youtube.com/c/ChannelName6') || lowerLine.includes('youtu.be/'); // Cambio clave aquí
             const includesTwitch = lowerLine.includes('twitch.tv/');
             const includesKick = lowerLine.includes('kick.com/');
             const includesFacebook = lowerLine.includes('facebook.com/');
 
-            console.log(`DEBUG: Línea ${index + 1} - Resultados de .includes(): YouTubeDomain=${includesYouTubeDomain}, YouTubeShort=${includesYouTubeShortDomain}, Twitch=${includesTwitch}, Kick=${includesKick}, Facebook=${includesFacebook}`);
+            console.log(`DEBUG: Línea ${index + 1} - Resultados de .includes(): YouTube=${includesYouTube}, Twitch=${includesTwitch}, Kick=${includesKick}, Facebook=${includesFacebook}`);
 
             if (includesTwitch) {
                 platform = 'twitch';
             } else if (includesKick) {
                 platform = 'kick';
-            } else if (includesYouTubeDomain || includesYouTubeShortDomain) {
+            } else if (includesYouTube) { // Simplificado de (includesYouTubeDomain || includesYouTubeShortDomain)
                 platform = 'youtube';
             } else if (includesFacebook) {
                 platform = 'facebook';
             }
-
+            
             console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
             inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
@@ -297,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 platform: updatedStreamInfoFromApi.platform || streamToUpdate.platform,
                 lastCheck: new Date().toLocaleTimeString()
             };
-            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].identifier}:`, JSON.parse(JSON.stringify(monitoredStreams[index]))); // Asegurar logueo
+            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].identifier}:`, JSON.parse(JSON.stringify(monitoredStreams[index])));
             if (typeof updateStreamRow === 'function') updateStreamRow(monitoredStreams[index]);
         } catch (error) {
             console.error(`app.js: Error en API call para ${streamToUpdate.identifier}:`, error);
