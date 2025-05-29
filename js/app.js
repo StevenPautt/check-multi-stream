@@ -170,44 +170,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lógica de Parseo y Verificación de Streams ---
     function parseInputLines(textContent) {
-        console.log("app.js: parseInputLines() INICIO. Contenido recibido (primeros 100 chars):", textContent.substring(0,100));
+        console.log("app.js: parseInputLines() INICIO.");
         const lines = textContent.split(/\r?\n/);
         const inputs = [];
         lines.forEach((line, index) => {
+            const originalLineFromFile = line; // Guardar la línea original antes de trim()
             const trimmedLine = line.trim();
-            console.log(`app.js: Procesando línea ${index + 1}: "${trimmedLine}"`);
+            
+            console.log(`DEBUG: Línea ${index + 1} (original del archivo): [${originalLineFromFile}]`);
+            console.log(`DEBUG: Línea ${index + 1} (después de trim()):     [${trimmedLine}]`);
+
+            // Log de los códigos de caracteres de la parte final de trimmedLine
+            if (trimmedLine.length > 0) {
+                const lastChar = trimmedLine.slice(-1);
+                const secondLastChar = trimmedLine.length > 1 ? trimmedLine.slice(-2, -1) : "";
+                console.log(`DEBUG: Línea ${index + 1} trimmedLine - Último char: '${lastChar}' (código: ${lastChar.charCodeAt(0)}), Penúltimo: '${secondLastChar}' (código: ${secondLastChar ? secondLastChar.charCodeAt(0) : 'N/A'})`);
+            }
 
             if (trimmedLine === '' || trimmedLine.startsWith('#')) {
                 console.log(`app.js: Línea ${index + 1} ignorada (vacía o comentario).`);
                 return;
             }
             
+            const lowerLine = trimmedLine.toLowerCase();
+            console.log(`DEBUG: Línea ${index + 1} (después de toLowerCase()): [${lowerLine}]`);
+
+            // Log de los códigos de caracteres de la parte final de lowerLine
+            if (lowerLine.length > 0) {
+                const lastCharLower = lowerLine.slice(-1);
+                const secondLastCharLower = lowerLine.length > 1 ? lowerLine.slice(-2, -1) : "";
+                console.log(`DEBUG: Línea ${index + 1} lowerLine - Último char: '${lastCharLower}' (código: ${lastCharLower.charCodeAt(0)}), Penúltimo: '${secondLastCharLower}' (código: ${secondLastCharLower ? secondLastCharLower.charCodeAt(0) : 'N/A'})`);
+            }
+
+            // Verificación crítica de la transformación
+            if (trimmedLine === "https://www.youtube.com/@Korbion" && lowerLine !== "https://www.youtube.com/@Korbion") {
+                console.error(`¡¡¡ALERTA CRÍTICA DEBUG!!! toLowerCase() CAMBIÓ INESPERADAMENTE LA CADENA: "${trimmedLine}" -> "${lowerLine}"`);
+            }
+
+
             let platform = 'unknown';
             let identifier = trimmedLine; 
-            const lowerLine = trimmedLine.toLowerCase();
-            console.log(`app.js: Línea ${index + 1} en minúsculas: "${lowerLine}"`);
 
             // Detección de Plataforma
-            // Variables para ver el resultado de cada .includes()
-            const includesYouTube = lowerLine.includes('youtube.com/c/ChannelName7');
-            const includesYouTuBe = lowerLine.includes('youtu.be/'); // Para youtu.be
+            const includesYouTubeDomain = lowerLine.includes('youtube.com/c/ChannelName7');
+            const includesYouTubeShortDomain = lowerLine.includes('youtu.be/');
             const includesTwitch = lowerLine.includes('twitch.tv/');
             const includesKick = lowerLine.includes('kick.com/');
             const includesFacebook = lowerLine.includes('facebook.com/');
 
-            console.log(`app.js: Línea ${index + 1} - Checks: YouTube=${includesYouTube}, YouTu.be=${includesYouTuBe}, Twitch=${includesTwitch}, Kick=${includesKick}, Facebook=${includesFacebook}`);
+            console.log(`DEBUG: Línea ${index + 1} - Resultados de .includes(): YouTubeDomain=${includesYouTubeDomain}, YouTubeShort=${includesYouTubeShortDomain}, Twitch=${includesTwitch}, Kick=${includesKick}, Facebook=${includesFacebook}`);
 
             if (includesTwitch) {
                 platform = 'twitch';
             } else if (includesKick) {
                 platform = 'kick';
-            } else if (includesYouTube || includesYouTuBe) {
+            } else if (includesYouTubeDomain || includesYouTubeShortDomain) {
                 platform = 'youtube';
             } else if (includesFacebook) {
                 platform = 'facebook';
             }
             
-            console.log(`app.js: Línea ${index + 1} - Plataforma detectada: ${platform}`);
+            console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
             inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
         console.log("app.js: parseInputLines() FIN. Entradas detectadas:", inputs);
