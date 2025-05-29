@@ -1,417 +1,404 @@
-/* --- Importación de Fuentes (Desde HTML, pero bueno tenerlo aquí como referencia) --- */
-/* @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap'); */
+/* css/style.css */
 
-/* --- Variables CSS para Temas --- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap');
+
 :root {
-    /* Tipografía */
     --font-primary: 'Open Sans', sans-serif;
-    --font-secondary: 'Roboto', sans-serif; /* Para encabezados o elementos destacados */
+    --font-secondary: 'Roboto', sans-serif;
 
-    /* Colores Base - Tema Claro (Default) */
-    --bg-color: #f4f7f9;                  /* Gris muy claro para el fondo general */
-    --text-color: #212529;                /* Texto oscuro estándar */
-    --text-muted-color: #6c757d;          /* Texto secundario o silenciado */
-    --card-bg-color: #ffffff;             /* Fondo de las tarjetas */
-    --card-border-color: #dee2e6;         /* Borde de las tarjetas */
-    --header-bg-color: #ffffff;           /* Fondo de la cabecera */
-    --header-text-color: #343a40;         /* Texto de la cabecera */
-    --header-border-color: #e0e0e0;       /* Borde inferior de la cabecera */
-    --footer-text-color: #6c757d;
-
-    /* Acentos y Botones */
-    --primary-accent: #007bff;            /* Azul primario (Bootstrap default) */
-    --primary-accent-hover: #0056b3;      /* Azul primario al pasar el mouse */
-    --primary-accent-text: #ffffff;       /* Texto para botones con fondo primario */
-    --secondary-accent: #6c757d;          /* Gris secundario (Bootstrap default) */
-    --secondary-accent-hover: #545b62;
-    --secondary-accent-text: #ffffff;
-
-    /* Estados de Streams (Badges) */
-    --status-live-bg: rgba(25, 135, 84, 0.1);  /* Fondo sutil verde */
-    --status-live-text: #198754;               /* Texto verde */
-    --status-offline-bg: rgba(220, 53, 69, 0.1);/* Fondo sutil rojo */
-    --status-offline-text: #dc3545;            /* Texto rojo */
-    --status-error-bg: rgba(255, 193, 7, 0.15); /* Fondo sutil amarillo */
-    --status-error-text: #b58900;              /* Texto amarillo/ocre */
-    --status-unknown-bg: rgba(108, 117, 125, 0.1);/* Fondo sutil gris */
-    --status-unknown-text: #6c757d;            /* Texto gris */
-
-    /* Plataformas (Badges) */
-    --platform-youtube-bg: rgba(255, 0, 0, 0.1);
-    --platform-youtube-text: #cc0000;
-    --platform-facebook-bg: rgba(24, 119, 242, 0.1);
-    --platform-facebook-text: #1877f2;
-    --platform-twitch-bg: rgba(145, 70, 255, 0.1); /* Ejemplo si añades Twitch */
-    --platform-twitch-text: #9146ff;
-    --platform-generic-bg: rgba(108, 117, 125, 0.1);
-    --platform-generic-text: #6c757d;
+    /* Tema Claro Fénix (Renacer, Luz, Cálido) */
+    --bg-color: #FFFBF5; 
+    --text-color: #4A3B32; 
+    --text-muted-color: #8B7E75;
+    --card-bg-color: #FFFFFF;
+    --card-border-color: #F5EAE0; 
+    --header-bg-color: #FFF0E1; 
+    --header-text-color: #5D4037; 
+    --header-border-color: #FFDCC1;
+    --footer-text-color: var(--text-muted-color);
+    --table-header-border-color: #FFB74D; 
+    --table-cell-border-color: var(--card-border-color); 
+    --phoenix-glow-color-1: rgba(255, 111, 0, 0.4); 
+    --phoenix-glow-color-2: rgba(255, 167, 38, 0.6);
 
 
-    /* Formularios */
-    --input-bg: #ffffff;
-    --input-border: #ced4da;
-    --input-text-color: #495057;
-    --input-focus-border: #86b7fe; /* Azul claro al enfocar */
-    --input-focus-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    --primary-accent: #FF7043; 
+    --primary-accent-hover: #FF5722; 
+    --primary-accent-text: #FFFFFF;
+    --secondary-accent: #FFB74D; 
+    --secondary-accent-hover: #FFA726;
+    --secondary-accent-text: #4A3B32;
 
-    /* Sombras y Bordes */
-    --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
-    --shadow-md: 0 .5rem 1rem rgba(0,0,0,.10);
-    --shadow-lg: 0 1rem 3rem rgba(0,0,0,.125);
-    --border-radius: .375rem; /* Bootstrap default */
-    --border-radius-lg: .5rem;
+    --link-color: #E55D3B; 
+    --link-hover-color: #C54A2B;
+
+    /* Estados - Tema Claro */
+    --status-live-bg: rgba(100, 181, 246, 0.15); --status-live-text: #1E88E5;                
+    --status-offline-bg: rgba(189, 189, 189, 0.15); --status-offline-text: #757575;
+    --status-error-bg: rgba(239, 83, 80, 0.1); --status-error-text: #D32F2F;
+    --status-pending-bg: rgba(255, 209, 128, 0.2); --status-pending-text: #FFA000;
+    --status-unknown-bg: var(--status-pending-bg); --status-unknown-text: var(--status-pending-text);
+    
+    --platform-youtube-bg: rgba(255,0,0,0.08); --platform-youtube-text: #D32F2F;
+    --platform-facebook-bg: rgba(24,119,242,0.08); --platform-facebook-text: #1565C0;
+    --platform-twitch-bg: rgba(145,70,255,0.08); --platform-twitch-text: #6A1B9A;
+    --platform-kick-bg: rgba(82,201,50,0.1); --platform-kick-text: #388E3C; 
+    --platform-generic-bg: rgba(120,144,156,0.1); --platform-generic-text: #455A64;
+
+    --input-bg: #FFFFFF;
+    --input-border: #E0D8CF; 
+    --input-text-color: var(--text-color);
+    --input-placeholder-color: #A99F97;
+    --input-focus-border: var(--primary-accent);
+    --input-focus-shadow: 0 0 0 0.25rem rgba(255, 112, 67, 0.25);
+
+    --shadow-sm: 0 2px 4px rgba(93, 64, 55, .06); 
+    --shadow-md: 0 4px 12px rgba(93, 64, 55, .08);
+    --shadow-lg: 0 10px 30px rgba(93, 64, 55, .1);
+    --border-radius: .4rem;
+    --border-radius-lg: .6rem;
+    --primary-accent-rgb-val: 255, 111, 0; 
 }
 
 [data-theme="dark"] {
-    --bg-color: #121212;                  /* Fondo principal oscuro */
-    --text-color: #e0e0e0;                /* Texto claro */
-    --text-muted-color: #a0a0a0;
-    --card-bg-color: #1e1e1e;             /* Fondo de tarjetas oscuro */
-    --card-border-color: #333333;         /* Borde de tarjetas más oscuro */
-    --header-bg-color: #1e1e1e;
-    --header-text-color: #f8f9fa;
-    --header-border-color: #2c2c2c;
-    --footer-text-color: #a0a0a0;
+    /* Tema Oscuro Fénix */
+    --bg-color: #1A1A1D;                  
+    --text-color: #EAEAEA;                
+    --text-muted-color: #888E93; 
+    --card-bg-color: #23272A;             
+    --card-border-color: #3A3F42;         
+    --header-bg-color: #0D0D0D;           
+    --header-text-color: #FFCA28;         
+    --header-border-color: var(--primary-accent); 
+    --footer-text-color: var(--text-muted-color);
+    --table-header-border-color: var(--primary-accent); 
+    --table-cell-border-color: #383C3F; 
+    --phoenix-glow-color-1: rgba(255, 109, 0, 0.7); 
+    --phoenix-glow-color-2: rgba(255, 78, 0, 0.9);  
 
-    --primary-accent: #0d6efd;            /* Azul puede necesitar ser un poco más brillante */
-    --primary-accent-hover: #0a58ca;
-    --secondary-accent: #78828a;
-    --secondary-accent-hover: #5c636a;
+    --primary-accent: #FF6D00;            
+    --primary-accent-hover: #FF8A00;      
+    --primary-accent-text: #FFFFFF;
+    --secondary-accent: #FFCA28;          
+    --secondary-accent-hover: #FFD740;
+    --secondary-accent-text: #1A1A1D;
 
-    --status-live-bg: rgba(40, 167, 69, 0.18);
-    --status-live-text: #28a745;
-    --status-offline-bg: rgba(239, 83, 80, 0.18);
-    --status-offline-text: #ef5350;
-    --status-error-bg: rgba(255, 202, 40, 0.22);
-    --status-error-text: #ffca28;
-    --status-unknown-bg: rgba(108, 117, 125, 0.18);
-    --status-unknown-text: #adb5bd;
+    --link-color: var(--secondary-accent);
+    --link-hover-color: #FFE082; 
 
-    --platform-youtube-bg: rgba(255, 70, 70, 0.15);
-    --platform-youtube-text: #ff6b6b;
-    --platform-facebook-bg: rgba(59, 130, 246, 0.15);
-    --platform-facebook-text: #3b82f6;
-    --platform-twitch-bg: rgba(168, 85, 247, 0.15);
-    --platform-twitch-text: #a855f7;
-    --platform-generic-bg: rgba(108, 117, 125, 0.15);
-    --platform-generic-text: #adb5bd;
+    /* Estados - Tema Oscuro */
+    --status-live-bg: rgba(255, 109, 0, 0.25);  
+    --status-live-text: #FFAB40;               
+    --status-offline-bg: rgba(117, 117, 117, 0.25); 
+    --status-offline-text: #CCCCCC; 
+    --status-error-bg: rgba(215, 55, 42, 0.3); 
+    --status-error-text: #FF8A80;             
+    --status-pending-bg: rgba(144, 164, 174, 0.25); 
+    --status-pending-text: #E0E0E0; 
+    --status-unknown-bg: var(--status-pending-bg);
+    --status-unknown-text: var(--status-pending-text);
+    
+    --platform-youtube-bg: rgba(255,78,0,0.2); --platform-youtube-text: #FF8A65; /* Ligeramente más claro que el acento primario */
+    --platform-facebook-bg: rgba(255,171,64,0.2); --platform-facebook-text: #FFB74D;
+    --platform-twitch-bg: rgba(220,50,150,0.2); --platform-twitch-text: #F48FB1; 
+    --platform-kick-bg: rgba(255,215,0,0.2); --platform-kick-text: #FFEE58; 
+    --platform-generic-bg: rgba(96,125,139,0.2); --platform-generic-text: #B0BEC5;
 
-    --input-bg: #2c2c2c;
-    --input-border: #555555;
-    --input-text-color: #e0e0e0;
-    --input-focus-border: #0d6efd;
-    --input-focus-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35);
+    --input-bg: #3A3A3C;
+    --input-border: #5C5C5E;
+    --input-text-color: var(--text-color); 
+    --input-placeholder-color: #8E8E93;
+    --input-focus-border: var(--primary-accent);
+    --input-focus-shadow: 0 0 0 0.25rem rgba(255, 109, 0, 0.35);
 
-    --shadow-sm: 0 .125rem .25rem rgba(255,255,255,.035); /* Sombras claras */
-    --shadow-md: 0 .5rem 1rem rgba(255,255,255,.055);
-    --shadow-lg: 0 1rem 3rem rgba(255,255,255,.075);
+    --shadow-sm: 0 2px 5px rgba(0,0,0,.35);
+    --shadow-md: 0 5px 15px rgba(0,0,0,.45);
+    --shadow-lg: 0 10px 35px rgba(0,0,0,.5);
+    --primary-accent-rgb-val: 255, 109, 0; 
 }
 
-/* --- Estilos Base --- */
+/* --- Estilos Base (Usan Variables) --- */
 body {
     font-family: var(--font-primary);
     background-color: var(--bg-color);
-    color: var(--text-color);
+    color: var(--text-color); 
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
     margin: 0;
-    padding-top: 80px; /* Espacio para el header fijo, ajustar según altura del header */
 }
+body.main-app-page { 
+    padding-top: 80px; 
+}
+body.login-page { padding-top: 0 !important; } 
 
-h1, h2, h3, h4, h5, h6, .section-title {
+
+h1, h2, h3, h4, h5, h6, .section-title, .card-title, .form-label, label { 
     font-family: var(--font-secondary);
-    font-weight: 600;
-    color: var(--text-color);
+    font-weight: 700;
+    color: var(--text-color) !important; 
+    transition: color 0.3s ease;
 }
-
-p {
-    color: var(--text-color);
-}
-p.text-muted, .text-muted {
-    color: var(--text-muted-color) !important; /* Sobrescribir Bootstrap si es necesario */
-}
-
-a {
+.section-title i, .card-title i { 
     color: var(--primary-accent);
-    text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color 0.3s ease;
 }
-a:hover {
-    color: var(--primary-accent-hover);
-    text-decoration: underline;
+
+p, span, div, small { 
+    color: inherit; 
 }
+.text-muted, small.text-muted, .global-last-check-label { 
+    color: var(--text-muted-color) !important;
+    transition: color 0.3s ease;
+}
+
+a { color: var(--link-color); text-decoration: none; transition: color 0.2s ease; }
+a:hover { color: var(--link-hover-color); text-decoration: none; }
 
 .card {
     background-color: var(--card-bg-color);
     border: 1px solid var(--card-border-color);
-    border-radius: var(--border-radius-lg); /* Bordes más redondeados */
-    box-shadow: var(--shadow-sm);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative; 
+    overflow: hidden; 
 }
 
-.form-control, .form-select {
+/* Borde Animado Fénix (Sutil) */
+.phoenix-border::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px; 
+    z-index: -1; 
+    border-radius: inherit; 
+    background: conic-gradient(
+        var(--phoenix-glow-color-2), /* Empezar con el más brillante para el pulso */
+        var(--phoenix-glow-color-1), 
+        transparent,
+        transparent,
+        var(--phoenix-glow-color-1),
+        var(--phoenix-glow-color-2)
+    );
+    background-size: 300% 300%; /* Aumentar tamaño para un movimiento más suave */
+    animation: phoenixPulse 6s linear infinite; /* Duración más rápida */
+    opacity: 0; /* Inicia invisible */
+    transition: opacity 0.5s ease-in-out;
+}
+.card:hover.phoenix-border::before { /* Mostrar al hacer hover sobre el card */
+    opacity: 0.9;
+}
+
+
+@keyframes phoenixPulse {
+    0% { background-position: 0% 50%; transform: rotate(0deg); }
+    100% { background-position: 200% 50%; transform: rotate(360deg); } /* Ajustar para movimiento completo */
+}
+
+
+.form-control, .form-select, .form-control[readonly], textarea.form-control {
     background-color: var(--input-bg);
-    color: var(--input-text-color);
+    color: var(--input-text-color) !important; 
     border: 1px solid var(--input-border);
     border-radius: var(--border-radius);
-    padding: .65rem .95rem; /* Un poco más de padding */
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    padding: .75rem 1rem;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.15s ease-in-out;
 }
-.form-control:focus, .form-select:focus {
+.form-control::placeholder, textarea::placeholder { 
+    color: var(--input-placeholder-color) !important; 
+    opacity: 1; 
+}
+.form-control:focus, .form-select:focus, textarea.form-control:focus {
     background-color: var(--input-bg);
     color: var(--input-text-color);
     border-color: var(--input-focus-border);
     box-shadow: var(--input-focus-shadow);
 }
-.form-label {
-    font-weight: 500;
-    margin-bottom: .5rem;
-}
+
+textarea.form-control { min-height: 120px; }
 
 .btn {
     border-radius: var(--border-radius);
-    padding: .65rem 1.25rem;
-    font-weight: 500;
-    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    padding: .75rem 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.1s ease-in-out;
+    text-transform: uppercase;
 }
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .btn-primary {
     background-color: var(--primary-accent);
     border-color: var(--primary-accent);
-    color: var(--primary-accent-text);
+    color: var(--primary-accent-text) !important; 
 }
 .btn-primary:hover {
     background-color: var(--primary-accent-hover);
     border-color: var(--primary-accent-hover);
-    color: var(--primary-accent-text);
-}
-.btn-secondary {
-    background-color: var(--secondary-accent);
-    border-color: var(--secondary-accent);
-    color: var(--secondary-accent-text);
-}
-.btn-secondary:hover {
-    background-color: var(--secondary-accent-hover);
-    border-color: var(--secondary-accent-hover);
-    color: var(--secondary-accent-text);
+    color: var(--primary-accent-text) !important;
+    box-shadow: 0 4px 10px rgba(var(--primary-accent-rgb-val, 255, 111, 0), 0.3);
 }
 .btn-outline-secondary {
-    color: var(--secondary-accent);
-    border-color: var(--secondary-accent);
+    color: var(--secondary-accent) !important;
+    border-color: var(--secondary-accent) !important;
+    font-weight: 600;
 }
 .btn-outline-secondary:hover {
-    color: var(--secondary-accent-text);
+    color: var(--secondary-accent-text) !important;
     background-color: var(--secondary-accent);
     border-color: var(--secondary-accent);
 }
 
+/* --- Estilo del Interruptor de Tema  --- */
+.theme-toggle-container { display: flex; align-items: center; }
+.theme-label-text { color: var(--text-color) !important; font-size: 0.9em; transition: color 0.3s ease; }
+.theme-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #757575; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; box-shadow: 0 0 3px rgba(0,0,0,0.3); }
+input:checked + .slider { background-color: var(--secondary-accent); } 
+input:focus + .slider { box-shadow: 0 0 1px var(--secondary-accent); }
+input:checked + .slider:before { transform: translateX(22px); }
+.slider.round { border-radius: 28px; }
+.slider.round:before { border-radius: 50%; }
 
-/* --- Estilo del Interruptor de Tema --- */
-.theme-toggle-container {
-    display: flex;
-    align-items: center;
-}
-.theme-label-text { /* Para el texto "Modo Oscuro" */
-    color: var(--text-color);
-    font-size: 0.85em;
-    transition: color 0.3s ease;
-}
-.theme-switch {
-    position: relative;
-    display: inline-block;
-    width: 48px;  /* Ancho del switch */
-    height: 26px; /* Alto del switch */
-}
-.theme-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc; /* Color base del slider */
-    transition: .4s;
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 20px; /* Tamaño del círculo */
-    width: 20px;  /* Tamaño del círculo */
-    left: 3px;    /* Posición inicial del círculo */
-    bottom: 3px;  /* Posición inicial del círculo */
-    background-color: white;
-    transition: .4s;
-}
-input:checked + .slider {
-    background-color: var(--primary-accent); /* Color cuando está activo */
-}
-input:focus + .slider {
-    box-shadow: 0 0 1px var(--primary-accent);
-}
-input:checked + .slider:before {
-    transform: translateX(22px); /* Distancia que se mueve el círculo */
-}
-.slider.round {
-    border-radius: 26px; /* Para hacerlo redondeado */
-}
-.slider.round:before {
-    border-radius: 50%;
-}
+/* --- Página de Login (`index.html`) --- */
+.login-page-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; } 
+.login-card-container { background-color: var(--card-bg-color); padding: 2.5rem 3rem; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 480px; border: 1px solid var(--card-border-color); }
+.login-card-header { text-align: center; margin-bottom: 2.5rem; }
+.app-logo { max-height: 70px; margin-bottom: 1.5rem; }
 
-/* --- Estilos Página de Login (`index.html`) --- */
-.login-page-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 80px); /* Ajustar si el padding-top del body cambia */
-    padding: 20px;
-}
-.login-card-container {
-    background-color: var(--card-bg-color);
-    padding: 2rem 2.5rem; /* Más padding horizontal */
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-lg); /* Sombra más pronunciada para el login card */
-    width: 100%;
-    max-width: 480px;
-    border: 1px solid var(--card-border-color);
-}
-.login-card-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-.app-logo {
-    max-height: 70px;
-    margin-bottom: 1rem;
-}
-
-/* --- Estilos Página Principal (`main.html`) --- */
+/* --- Página Principal (`main.html`) --- */
 .app-main-header {
     background-color: var(--header-bg-color);
-    color: var(--header-text-color);
-    padding: 0.9rem 1.5rem; /* Más padding vertical */
+    color: var(--header-text-color) !important; 
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--header-border-color);
-    box-shadow: var(--shadow-sm);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1030;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: var(--shadow-md); 
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
-.app-logo-header {
-    max-height: 35px; /* Logo más pequeño en header */
-    vertical-align: middle;
+.app-logo-header { max-height: 38px; vertical-align: middle; }
+.app-name-header { font-size: 1.4rem; font-weight: 700; color: var(--header-text-color) !important; vertical-align: middle; transition: color 0.3s ease; }
+.header-actions .btn-outline-secondary { 
+    color: var(--header-text-color) !important;
+    border-color: var(--header-text-color) !important;
 }
-.app-name-header {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--header-text-color);
-    vertical-align: middle;
-    transition: color 0.3s ease;
+.header-actions .btn-outline-secondary:hover {
+    background-color: var(--header-text-color) !important;
+    color: var(--header-bg-color) !important; 
 }
-.app-main-content {
-    /* padding-top ya está en el body */
-}
-.app-section.card {
-    margin-bottom: 2rem; /* Más espaciado entre secciones */
-}
-.section-title i {
-    color: var(--primary-accent); /* Iconos del título con color de acento */
-    transition: color 0.3s ease;
+.header-actions .theme-label-text {
+    color: var(--header-text-color) !important;
 }
 
-/* Input de archivo personalizado */
-.btn-file-input {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+.app-section.card { margin-bottom: 2.5rem; }
+
+/* Controles de Filtro */
+.filter-controls {
+    margin-bottom: 1rem; 
 }
-.file-name-display-field {
-    border-left: 0;
-    background-color: var(--input-bg) !important; /* Forzar bg */
-    color: var(--text-muted-color); /* Texto más suave para el placeholder */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.filter-controls input[type="text"], .filter-controls select {
+    max-width: 220px; 
+    font-size: 0.875rem; 
+    padding: .4rem .75rem;
+    background-color: var(--input-bg); /* Asegurar que los filtros usen colores de input del tema */
+    color: var(--input-text-color) !important;
+    border: 1px solid var(--input-border);
+}
+.filter-controls select {
+    -webkit-appearance: none; /* Para mejor estilo en algunos navegadores */
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E"); /* Flecha SVG básica */
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    background-size: 16px 12px;
+}
+[data-theme="dark"] .filter-controls select { /* Flecha para modo oscuro */
+     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23EAEAEA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
 }
 
-/* Tabla Principal */
-.app-main-table {
-    border-collapse: separate; /* Permite border-spacing si lo necesitas */
-    border-spacing: 0; /* Opcional */
-    font-size: 0.9rem; /* Texto de tabla un poco más pequeño */
-}
+
+/* Tabla Principal - ASEGURAR VISIBILIDAD DE TEXTO */
+.app-main-table { border-collapse: separate; border-spacing: 0; font-size: 0.9rem; width: 100%;}
 .app-main-table thead th {
-    background-color: var(--card-bg-color); /* Fondo consistente con la tarjeta */
-    color: var(--text-color);
-    font-weight: 600; /* Semibold */
-    border-bottom-width: 2px;
-    border-top: 0; /* Quitar borde superior de cabeceras de tabla Bootstrap */
-    border-color: var(--card-border-color);
-    padding: .9rem .75rem;
+    background-color: var(--card-bg-color); 
+    color: var(--text-color) !important; 
+    font-weight: 700; 
+    border-bottom: 2px solid var(--table-header-border-color) !important; 
+    border-top: 0;
+    padding: 1rem .9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 .app-main-table td {
-    border-color: var(--card-border-color);
-    padding: .8rem .75rem;
+    border-bottom: 1px solid var(--table-cell-border-color) !important; 
+    padding: .9rem .9rem;
     vertical-align: middle;
+    color: var(--text-color) !important; 
 }
+.app-main-table tbody tr { transition: background-color 0.2s ease; }
 .app-main-table tbody tr:hover {
-   background-color: rgba(var(--primary-accent-rgb-val, 0, 123, 255), 0.06); /* Ajusta el color hover */
-   /* Definir --primary-accent-rgb-val en :root y modo oscuro para que el hover cambie de color */
-}
-:root { --primary-accent-rgb-val: 0, 123, 255; } /* Ejemplo para el hover de la tabla */
-[data-theme="dark"] { --primary-accent-rgb-val: 13, 110, 253; }
-
-/* Badges de Estado y Plataforma */
-.status-badge, .platform-badge {
-    padding: 0.35em 0.65em;
-    font-weight: 500; /* Un poco menos bold que las cabeceras */
-    font-size: 0.8em; /* Más pequeños */
-    display: inline-flex; /* Para alinear ícono y texto */
-    align-items: center;
-}
-.status-badge i, .platform-badge i {
-    font-size: 0.9em; /* Iconos un poco más pequeños dentro del badge */
+   background-color: rgba(var(--primary-accent-rgb-val, 255, 111, 0), 0.1); 
 }
 
-.status-badge.status-live { background-color: var(--status-live-bg); color: var(--status-live-text); }
-.status-badge.status-offline { background-color: var(--status-offline-bg); color: var(--status-offline-text); }
-.status-badge.status-error { background-color: var(--status-error-bg); color: var(--status-error-text); }
-.status-badge.status-unknown { background-color: var(--status-unknown-bg); color: var(--status-unknown-text); }
-
-.platform-badge.platform-youtube { background-color: var(--platform-youtube-bg); color: var(--platform-youtube-text); }
-.platform-badge.platform-facebook { background-color: var(--platform-facebook-bg); color: var(--platform-facebook-text); }
-.platform-badge.platform-twitch { background-color: var(--platform-twitch-bg); color: var(--platform-twitch-text); }
-.platform-badge.platform-generic { background-color: var(--platform-generic-bg); color: var(--platform-generic-text); }
-
-
-/* Indicador de Carga */
-#loadingSpinner.spinner-border {
-    width: 2rem;
-    height: 2rem;
-    border-width: .2rem;
+.app-main-table .stream-title-col { 
+    min-width: 200px; 
+    max-width: 350px; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    font-weight: 500; 
+    color: var(--text-color) !important; 
 }
+.app-main-table .viewers-col { text-align: right; min-width: 120px; font-weight: 500; }
+.app-main-table .platform-col { min-width: 130px; }
+
+.app-main-table .name-identifier-col .channel-name { 
+    display: block; 
+    font-weight: 600; 
+    color: var(--text-color) !important; 
+}
+.app-main-table .name-identifier-col .channel-id { 
+    font-size: 0.8em; 
+    color: var(--text-muted-color) !important; 
+}
+
+/* Badges de Estado y Plataforma (revisar colores de texto para contraste) */
+.badge { font-size: 0.85em; padding: .5em .8em; letter-spacing: 0.3px; font-weight: 600; }
+.status-badge i, .platform-badge i { font-size: 1em; vertical-align: text-bottom; } /* Ajustar alineación de íconos */
+
+.status-badge.status-live { background-color: var(--status-live-bg) !important; color: var(--status-live-text) !important; border: 1px solid var(--status-live-text);}
+.status-badge.status-offline { background-color: var(--status-offline-bg) !important; color: var(--status-offline-text) !important; border: 1px solid var(--status-offline-text);}
+.status-badge.status-error { background-color: var(--status-error-bg) !important; color: var(--status-error-text) !important; border: 1px solid var(--status-error-text);}
+.status-badge.status-pending { background-color: var(--status-pending-bg) !important; color: var(--status-pending-text) !important; border: 1px solid var(--status-pending-text);}
+.status-badge.status-unknown { background-color: var(--status-unknown-bg) !important; color: var(--status-unknown-text) !important; border: 1px solid var(--status-unknown-text);}
+
+.platform-badge { border: 1px solid transparent; } 
+.platform-badge.platform-youtube { background-color: var(--platform-youtube-bg); color: var(--platform-youtube-text); border-color: var(--platform-youtube-text); }
+.platform-badge.platform-facebook { background-color: var(--platform-facebook-bg); color: var(--platform-facebook-text); border-color: var(--platform-facebook-text); }
+.platform-badge.platform-twitch { background-color: var(--platform-twitch-bg); color: var(--platform-twitch-text); border-color: var(--platform-twitch-text); }
+.platform-badge.platform-kick { background-color: var(--platform-kick-bg); color: var(--platform-kick-text); border-color: var(--platform-kick-text); }
+.platform-badge.platform-generic { background-color: var(--platform-generic-bg); color: var(--platform-generic-text); border-color: var(--platform-generic-text); }
+
+/* Spinner */
+#loadingSpinner.spinner-border { width: 2.5rem; height: 2.5rem; border-width: .3em; color: var(--primary-accent); }
 
 /* Footer */
-.app-footer {
-    border-top: 1px solid var(--card-border-color);
-    background-color: var(--card-bg-color); /* Puede ser igual que el fondo o un card */
-    color: var(--footer-text-color);
-    font-size: 0.85em;
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
+.app-footer { border-top: 1px solid var(--header-border-color); background-color: var(--bg-color); color: var(--footer-text-color); font-size: 0.9em; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
 
-/* Alertas (para mensajes de error/éxito) */
-.alert {
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-}
-.alert .bi { /* Iconos en alertas */
-    margin-right: 0.5rem;
-    font-size: 1.1em;
-    vertical-align: middle;
-}
+/* Alertas */
+.alert { border-radius: var(--border-radius); font-size: 0.95rem; box-shadow: var(--shadow-sm); }
+.alert .bi { margin-right: 0.5rem; font-size: 1.2em; vertical-align: middle; }
+.alert-info { background-color: var(--secondary-accent) !important; color:var(--secondary-accent-text) !important; border-color: var(--secondary-accent-hover) !important; }
+.alert-danger { background-color: var(--status-error-bg) !important; color: var(--status-error-text) !important; border-color: var(--status-error-text) !important; }
+.alert-warning { background-color: var(--status-pending-bg) !important; color: var(--status-pending-text) !important; border-color: var(--status-pending-text) !important; }
+.alert-success { background-color: var(--status-live-bg) !important; color: var(--status-live-text) !important; border-color: var(--status-live-text) !important; }
+
+/* Clases de columna para la tabla */
+.platform-col { width: 13%; }
+.name-identifier-col { width: 27%; } 
+.status-col { width: 10%; text-align: center;} /* Centrar estado */
+.stream-title-col { width: 30%; }
+.viewers-col { width: 10%; text-align: right; } 
+.last-check-col { width: 10%; text-align: center; }
