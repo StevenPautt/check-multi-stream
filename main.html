@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light"> <head>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,10 +10,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="main-app-page"> <header class="app-main-header shadow-sm">
+<body class="main-app-page">
+    <header class="app-main-header shadow-sm">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <div class="app-branding">
-                <img src="assets/placeholder-logo.png" alt="Logo" class="app-logo-header me-2"> <span class="app-name-header">Check Multi-Stream</span>
+                <img src="assets/placeholder-logo.png" alt="Logo" class="app-logo-header me-2">
+                <span class="app-name-header">Check Multi-Stream</span>
             </div>
             <div class="header-actions d-flex align-items-center">
                 <div class="theme-toggle-container me-3">
@@ -20,10 +23,10 @@
                         <input type="checkbox" id="themeToggleCheckbox" />
                         <span class="slider round"></span>
                     </label>
-                    <span class="ms-2 align-middle theme-label-text">Modo Oscuro</span>
+                    <span class="ms-2 align-middle theme-label-text">Dark Mode</span>
                 </div>
                 <button id="logoutButton" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-box-arrow-left me-1"></i> Salir
+                    <i class="bi bi-box-arrow-left me-1"></i> Logout
                 </button>
             </div>
         </div>
@@ -32,30 +35,51 @@
     <main class="container app-main-content mt-4">
         <section id="controlsSection" class="app-section card phoenix-border mb-4">
             <div class="card-body">
-                <h5 class="card-title section-title"><i class="bi bi-gear-wide-connected me-2"></i>Controles de Verificación</h5>
-                 <div id="appMessage" class="alert d-none" role="alert">
+                <h5 class="card-title section-title"><i class="bi bi-gear-wide-connected me-2"></i>Verification Controls</h5>
+                <div id="appMessage" class="alert d-none" role="alert"></div>
+
+                <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-md-8">
+                        <label for="youtubeApiKeyInput" class="form-label">YouTube API Key (optional, for YouTube checks):</label>
+                        <input type="password" id="youtubeApiKeyInput" class="form-control form-control-sm" placeholder="Paste your YouTube API Key here">
                     </div>
+                    <div class="col-md-4">
+                        <button id="saveApiKeyButton" class="btn btn-secondary btn-sm w-100">Save API Key</button>
+                    </div>
+                    <div class="col-12">
+                        <small id="apiKeyStatus" class="form-text text-muted"></small>
+                    </div>
+                </div>
+                
+                <hr/>
 
                 <div class="row g-3">
                     <div class="col-12">
-                        <label for="urlInputArea" class="form-label">Pegar URLs (una por línea):</label>
-                        <textarea id="urlInputArea" class="form-control" rows="5" placeholder="Ej:
-https://www.youtube.com/@nombrecanal
-https://www.twitch.tv/nombrecanal
-https://kick.com/nombrekick
-https://www.facebook.com/nombrepagina"></textarea>
+                        <label for="urlInputArea" class="form-label">Paste URLs (one per line, format: `Nickname, URL`):</label>
+                        <textarea id="urlInputArea" class="form-control" rows="4" placeholder="Example:
+PlayerOne, https://www.twitch.tv/playeronechannel
+The Wild Project, https://www.youtube.com/watch?v=mJCJUTpwnNM"></textarea>
                     </div>
                 </div>
 
-                <div class="row g-3 mt-3">
-                    <div class="col-12 col-md-5 col-lg-4"> <button class="btn btn-primary w-100" id="checkStreamsButton">
-                            <i class="bi bi-play-btn me-1"></i> Verificar URLs
+                <div class="row g-3 mt-3 align-items-center">
+                    <div class="col-sm-6 col-md-4">
+                        <button class="btn btn-primary w-100" id="checkStreamsButton">
+                            <i class="bi bi-play-btn me-1"></i> Check All (from Textarea)
                         </button>
                     </div>
+                    <div class="col-sm-6 col-md-4">
+                        <button class="btn btn-info w-100" id="manualRefreshButton">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Manual Refresh All
+                        </button>
+                    </div>
+                    <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                        <small class="text-muted global-last-check-label">Global Last Check: <span id="globalLastCheckTime">-</span></small>
+                    </div>
                 </div>
-
-                <div class="row g-2 mt-2"> <div class="col-12 text-md-end">
-                        <small class="text-muted global-last-check-label">Última Verificación Global: <span id="globalLastCheckTime">-</span></small>
+                 <div class="row mt-2">
+                    <div class="col-12">
+                        <small id="youtubeQuotaStatus" class="form-text text-muted"></small>
                     </div>
                 </div>
             </div>
@@ -63,37 +87,38 @@ https://www.facebook.com/nombrepagina"></textarea>
 
         <section id="streamsStatusSection" class="app-section card phoenix-border">
             <div class="card-body">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2"> <h5 class="card-title section-title mb-0"><i class="bi bi-list-task me-2"></i>Estado de Streams Monitoreados</h5>
-                    <div class="filter-controls d-flex flex-column flex-md-row gap-2"> <input type="text" id="filterByName" class="form-control form-control-sm" placeholder="Filtrar por nombre/ID...">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <h5 class="card-title section-title mb-0"><i class="bi bi-list-task me-2"></i>Monitored Streams Status</h5>
+                    <div class="filter-controls d-flex flex-column flex-md-row gap-2">
+                        <input type="text" id="filterByName" class="form-control form-control-sm" placeholder="Filter by Nickname/Channel...">
                         <select id="filterByPlatform" class="form-select form-select-sm">
-                            <option value="">Todas las Plataformas</option>
+                            <option value="">All Platforms</option>
                             <option value="youtube">YouTube</option>
                             <option value="twitch">Twitch</option>
                             <option value="kick">Kick</option>
                             <option value="facebook">Facebook</option>
-                            <option value="unknown">Desconocido</option>
-                            <option value="no soportado">No Soportado</option> </select>
+                            <option value="unknown">Unknown</option>
+                            <option value="unsupported">Unsupported</option> </select>
                     </div>
                     <div id="loadingSpinner" class="spinner-border text-primary d-none" role="status">
-                        <span class="visually-hidden">Cargando...</span>
+                        <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle app-main-table">
                         <thead class="table-group-divider">
                             <tr>
-                                <th class="platform-col">Plataforma</th>
-                                <th class="name-identifier-col">Canal/Página</th>
-                                <th class="status-col">Estado</th>
-                                <th class="stream-title-col">Título del Stream</th>
-                                <th class="viewers-col">Espectadores</th>
-                                <th class="last-check-col">Última Verificación</th>
+                                <th class="platform-col">Platform</th>
+                                <th class="name-identifier-col">Nickname / Channel</th>
+                                <th class="status-col">Status</th>
+                                <th class="stream-title-col">Stream Title</th>
+                                <th class="viewers-col">Viewers</th>
+                                <th class="last-check-col">Last Check</th>
                             </tr>
                         </thead>
-                        <tbody id="streamResultsBody" class="table-group-divider">
-                            </tbody>
+                        <tbody id="streamResultsBody" class="table-group-divider"></tbody>
                     </table>
-                     <p id="noStreamsMessage" class="text-center text-muted mt-3 py-3 d-none">No hay streams para mostrar. Ingresa algunas URLs y haz clic en "Verificar URLs".</p>
+                     <p id="noStreamsMessage" class="text-center text-muted mt-3 py-3 d-none">No streams to display. Paste some URLs (Nickname, URL) and click "Check URLs".</p>
                 </div>
             </div>
         </section>

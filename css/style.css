@@ -62,12 +62,12 @@
 
 [data-theme="dark"] {
     /* Tema Oscuro Fénix */
-    --bg-color: #1A1A1D;                  
-    --text-color: #acacac;                
-    --text-muted-color: #000000; 
+    --bg-color: #1C1C1E;                  
+    --text-color: #EAEAEA;                
+    --text-muted-color: #888E93; 
     --card-bg-color: #23272A;             
     --card-border-color: #3A3F42;         
-    --header-bg-color: #0D0D0D;           
+    --header-bg-color: #161618;           
     --header-text-color: #FFCA28;         
     --header-border-color: var(--primary-accent); 
     --footer-text-color: var(--text-muted-color);
@@ -81,7 +81,7 @@
     --primary-accent-text: #FFFFFF;
     --secondary-accent: #FFCA28;          
     --secondary-accent-hover: #FFD740;
-    --secondary-accent-text: #1A1A1D;
+    --secondary-accent-text: #1C1C1E;
 
     --link-color: var(--secondary-accent);
     --link-hover-color: #FFE082; 
@@ -98,7 +98,7 @@
     --status-unknown-bg: var(--status-pending-bg);
     --status-unknown-text: var(--status-pending-text);
     
-    --platform-youtube-bg: rgba(255,78,0,0.2); --platform-youtube-text: #FF8A65; /* Ligeramente más claro que el acento primario */
+    --platform-youtube-bg: rgba(255,78,0,0.2); --platform-youtube-text: #FF8A65;
     --platform-facebook-bg: rgba(255,171,64,0.2); --platform-facebook-text: #FFB74D;
     --platform-twitch-bg: rgba(220,50,150,0.2); --platform-twitch-text: #F48FB1; 
     --platform-kick-bg: rgba(255,215,0,0.2); --platform-kick-text: #FFEE58; 
@@ -172,26 +172,26 @@ a:hover { color: var(--link-hover-color); text-decoration: none; }
     z-index: -1; 
     border-radius: inherit; 
     background: conic-gradient(
-        var(--phoenix-glow-color-2), /* Empezar con el más brillante para el pulso */
+        var(--phoenix-glow-color-2), 
         var(--phoenix-glow-color-1), 
         transparent,
         transparent,
         var(--phoenix-glow-color-1),
         var(--phoenix-glow-color-2)
     );
-    background-size: 300% 300%; /* Aumentar tamaño para un movimiento más suave */
-    animation: phoenixPulse 6s linear infinite; /* Duración más rápida */
-    opacity: 0; /* Inicia invisible */
+    background-size: 300% 300%; 
+    animation: phoenixPulse 6s linear infinite; 
+    opacity: 0; 
     transition: opacity 0.5s ease-in-out;
 }
-.card:hover.phoenix-border::before { /* Mostrar al hacer hover sobre el card */
+.card:hover.phoenix-border::before { 
     opacity: 0.9;
 }
 
 
 @keyframes phoenixPulse {
     0% { background-position: 0% 50%; transform: rotate(0deg); }
-    100% { background-position: 200% 50%; transform: rotate(360deg); } /* Ajustar para movimiento completo */
+    100% { background-position: 200% 50%; transform: rotate(360deg); } 
 }
 
 
@@ -246,8 +246,19 @@ textarea.form-control { min-height: 120px; }
     background-color: var(--secondary-accent);
     border-color: var(--secondary-accent);
 }
+.btn-info { /* Estilo para el botón de refresco manual */
+    background-color: var(--secondary-accent);
+    border-color: var(--secondary-accent);
+    color: var(--secondary-accent-text) !important;
+}
+.btn-info:hover {
+    background-color: var(--secondary-accent-hover);
+    border-color: var(--secondary-accent-hover);
+    color: var(--secondary-accent-text) !important;
+}
 
-/* --- Estilo del Interruptor de Tema  --- */
+
+/* Estilo del Interruptor de Tema  */
 .theme-toggle-container { display: flex; align-items: center; }
 .theme-label-text { color: var(--text-color) !important; font-size: 0.9em; transition: color 0.3s ease; }
 .theme-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
@@ -260,21 +271,21 @@ input:checked + .slider:before { transform: translateX(22px); }
 .slider.round { border-radius: 28px; }
 .slider.round:before { border-radius: 50%; }
 
-/* --- Página de Login (`index.html`) --- */
+/* Página de Login (`index.html`) */
 .login-page-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; } 
 .login-card-container { background-color: var(--card-bg-color); padding: 2.5rem 3rem; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 480px; border: 1px solid var(--card-border-color); }
 .login-card-header { text-align: center; margin-bottom: 2.5rem; }
 .app-logo { max-height: 70px; margin-bottom: 1.5rem; }
 
-/* --- Página Principal (`main.html`) --- */
+/* Página Principal (`main.html`) */
 .app-main-header {
     background-color: var(--header-bg-color);
-    color: var(--header-text-color) !important; 
+    /* color: var(--header-text-color) !important; */ /* El texto dentro hereda o se asigna específicamente */
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--header-border-color);
     box-shadow: var(--shadow-md); 
     position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 .app-logo-header { max-height: 38px; vertical-align: middle; }
 .app-name-header { font-size: 1.4rem; font-weight: 700; color: var(--header-text-color) !important; vertical-align: middle; transition: color 0.3s ease; }
@@ -300,25 +311,24 @@ input:checked + .slider:before { transform: translateX(22px); }
     max-width: 220px; 
     font-size: 0.875rem; 
     padding: .4rem .75rem;
-    background-color: var(--input-bg); /* Asegurar que los filtros usen colores de input del tema */
+    background-color: var(--input-bg); 
     color: var(--input-text-color) !important;
     border: 1px solid var(--input-border);
 }
 .filter-controls select {
-    -webkit-appearance: none; /* Para mejor estilo en algunos navegadores */
+    -webkit-appearance: none; 
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E"); /* Flecha SVG básica */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E"); 
     background-repeat: no-repeat;
     background-position: right .75rem center;
     background-size: 16px 12px;
 }
-[data-theme="dark"] .filter-controls select { /* Flecha para modo oscuro */
+[data-theme="dark"] .filter-controls select { 
      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23EAEAEA' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
 }
 
-
-/* Tabla Principal - ASEGURAR VISIBILIDAD DE TEXTO */
+/* Tabla Principal */
 .app-main-table { border-collapse: separate; border-spacing: 0; font-size: 0.9rem; width: 100%;}
 .app-main-table thead th {
     background-color: var(--card-bg-color); 
@@ -354,19 +364,28 @@ input:checked + .slider:before { transform: translateX(22px); }
 .app-main-table .viewers-col { text-align: right; min-width: 120px; font-weight: 500; }
 .app-main-table .platform-col { min-width: 130px; }
 
-.app-main-table .name-identifier-col .channel-name { 
+.app-main-table .name-identifier-col .channel-link { /* Estilo para el enlace del canal */
+    text-decoration: none;
+}
+.app-main-table .name-identifier-col .channel-link:hover .channel-nickname {
+    color: var(--link-hover-color);
+    text-decoration: underline;
+}
+.app-main-table .name-identifier-col .channel-nickname { 
     display: block; 
     font-weight: 600; 
     color: var(--text-color) !important; 
+    margin-bottom: .15rem;
 }
+.app-main-table .name-identifier-col .channel-official-name,
 .app-main-table .name-identifier-col .channel-id { 
     font-size: 0.8em; 
     color: var(--text-muted-color) !important; 
 }
 
-/* Badges de Estado y Plataforma (revisar colores de texto para contraste) */
+/* Badges */
 .badge { font-size: 0.85em; padding: .5em .8em; letter-spacing: 0.3px; font-weight: 600; }
-.status-badge i, .platform-badge i { font-size: 1em; vertical-align: text-bottom; } /* Ajustar alineación de íconos */
+.status-badge i, .platform-badge i { font-size: 1em; vertical-align: text-bottom; } 
 
 .status-badge.status-live { background-color: var(--status-live-bg) !important; color: var(--status-live-text) !important; border: 1px solid var(--status-live-text);}
 .status-badge.status-offline { background-color: var(--status-offline-bg) !important; color: var(--status-offline-text) !important; border: 1px solid var(--status-offline-text);}
@@ -380,6 +399,18 @@ input:checked + .slider:before { transform: translateX(22px); }
 .platform-badge.platform-twitch { background-color: var(--platform-twitch-bg); color: var(--platform-twitch-text); border-color: var(--platform-twitch-text); }
 .platform-badge.platform-kick { background-color: var(--platform-kick-bg); color: var(--platform-kick-text); border-color: var(--platform-kick-text); }
 .platform-badge.platform-generic { background-color: var(--platform-generic-bg); color: var(--platform-generic-text); border-color: var(--platform-generic-text); }
+
+/* API Key y Quota Status en main.html */
+#apiKeyStatus, #youtubeQuotaStatus {
+    display: block; 
+    margin-top: 0.5rem;
+    font-size: 0.85em;
+    color: var(--text-muted-color);
+}
+#apiKeyStatus.text-success, #youtubeQuotaStatus.text-success { color: var(--status-live-text) !important; } /* Reutilizar colores de estado */
+#apiKeyStatus.text-warning, #youtubeQuotaStatus.text-warning { color: var(--status-pending-text) !important; }
+#youtubeQuotaStatus.text-danger { color: var(--status-error-text) !important; }
+
 
 /* Spinner */
 #loadingSpinner.spinner-border { width: 2.5rem; height: 2.5rem; border-width: .3em; color: var(--primary-accent); }
@@ -398,7 +429,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 /* Clases de columna para la tabla */
 .platform-col { width: 13%; }
 .name-identifier-col { width: 27%; } 
-.status-col { width: 10%; text-align: center;} /* Centrar estado */
+.status-col { width: 10%; text-align: center;} 
 .stream-title-col { width: 30%; }
 .viewers-col { width: 10%; text-align: right; } 
 .last-check-col { width: 10%; text-align: center; }
