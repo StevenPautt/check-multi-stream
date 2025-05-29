@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) {
         console.warn('app.js: Usuario no autenticado. Redirigiendo a index.html...');
         window.location.href = 'index.html';
-        return; 
+        return;
     } else if (typeof isUserLoggedIn !== 'function') {
         console.error("app.js: La función isUserLoggedIn() no está definida. Asegúrate de que auth.js se carga antes.");
         return;
@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Estado de la Aplicación ---
     let selectedFile = null;
-    let monitoredStreams = []; 
+    let monitoredStreams = [];
     let refreshIntervalId = null;
-    const REFRESH_INTERVAL_MS = 60000 * 2; 
+    const REFRESH_INTERVAL_MS = 60000 * 2;
     console.log("app.js: Variables de estado inicializadas.");
 
     // --- Inicialización ---
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("app.js: initializeApp() llamada.");
         setupEventListeners();
         console.log("app.js: setupEventListeners() llamada desde initializeApp.");
-        
+
         if (typeof showNoStreamsMessage === 'function') {
             showNoStreamsMessage(monitoredStreams.length === 0);
         } else {
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log("app.js: Intervalo de refresco detenido.");
                 }
                 if (typeof logoutUser === 'function') {
-                    logoutUser(); 
+                    logoutUser();
                 } else {
                     console.error("app.js: La función logoutUser() no está definida. ¿Se cargó auth.js?");
                 }
@@ -87,15 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedFile) {
             console.log("app.js: Archivo seleccionado:", selectedFile.name);
             if (typeof updateFileNameDisplay === 'function' && typeof showAppMessage === 'function') {
-                updateFileNameDisplay(selectedFile.name); 
-                showAppMessage(`Archivo "${selectedFile.name}" seleccionado. Haz clic en "Verificar Streams".`, 'info', 7000); 
+                updateFileNameDisplay(selectedFile.name);
+                showAppMessage(`Archivo "${selectedFile.name}" seleccionado. Haz clic en "Verificar Streams".`, 'info', 7000);
             } else {
                 console.error("app.js: 'updateFileNameDisplay' o 'showAppMessage' (sin ui.) no disponible en handleFileSelect. ¿Se cargó ui.js?");
             }
         } else {
             console.log("app.js: Ningún archivo seleccionado.");
             if (typeof updateFileNameDisplay === 'function') {
-                updateFileNameDisplay(null); 
+                updateFileNameDisplay(null);
             }
         }
     }
@@ -105,31 +105,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selectedFile) {
             console.warn("app.js: Intento de verificar streams sin archivo seleccionado.");
             if (typeof showAppMessage === 'function') {
-                showAppMessage('Por favor, selecciona un archivo primero.', 'warning'); 
+                showAppMessage('Por favor, selecciona un archivo primero.', 'warning');
             }
             return;
         }
 
-        if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true); 
-        if (typeof clearStreamTable === 'function') clearStreamTable();           
+        if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true);
+        if (typeof clearStreamTable === 'function') clearStreamTable();
         monitoredStreams = [];
         console.log("app.js: Tabla limpiada y streams monitoreados reseteados.");
 
         try {
             const fileContent = await selectedFile.text();
-            console.log("app.js: Contenido del archivo leído.");
-            const parsedInputs = parseInputLines(fileContent); 
+            console.log("app.js: Contenido del archivo leído (primeros 200 caracteres):", fileContent.substring(0,200)); // Log del contenido
+            const parsedInputs = parseInputLines(fileContent);
             console.log("app.js: Entradas parseadas del archivo:", parsedInputs);
 
             if (parsedInputs.length === 0) {
                 console.warn("app.js: El archivo no contiene entradas válidas o está vacío.");
-                if (typeof showAppMessage === 'function') showAppMessage('El archivo no contiene entradas válidas o está vacío.', 'warning'); 
-                if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true); 
-                return; 
+                if (typeof showAppMessage === 'function') showAppMessage('El archivo no contiene entradas válidas o está vacío.', 'warning');
+                if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true);
+                return;
             }
-            
+
             if (typeof showAppMessage === 'function') {
-                showAppMessage(`Procesando ${parsedInputs.length} entradas...`, 'info', 3000); 
+                showAppMessage(`Procesando ${parsedInputs.length} entradas...`, 'info', 3000);
             }
 
             parsedInputs.forEach(input => {
@@ -142,12 +142,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 monitoredStreams.push(initialStreamInfo);
                 if (typeof addStreamToTable === 'function') {
-                    addStreamToTable(initialStreamInfo); 
+                    addStreamToTable(initialStreamInfo);
                 }
             });
             console.log("app.js: Streams iniciales añadidos a la tabla y a monitoredStreams.");
 
-            await checkAllStreams(); 
+            await checkAllStreams();
             console.log("app.js: Primera verificación de todos los streams completada.");
 
             if (refreshIntervalId) {
@@ -159,41 +159,58 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('app.js: Error procesando el archivo en handleCheckStreams:', error);
             if (typeof showAppMessage === 'function') {
-                showAppMessage('Error al leer o procesar el archivo.', 'danger'); 
+                showAppMessage('Error al leer o procesar el archivo.', 'danger');
             }
         } finally {
-            if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false); 
-            if (typeof updateGlobalLastCheckTime === 'function') updateGlobalLastCheckTime(new Date().toLocaleTimeString()); 
+            if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false);
+            if (typeof updateGlobalLastCheckTime === 'function') updateGlobalLastCheckTime(new Date().toLocaleTimeString());
             console.log("app.js: handleCheckStreams() finalizado.");
         }
     }
 
     // --- Lógica de Parseo y Verificación de Streams ---
     function parseInputLines(textContent) {
-        console.log("app.js: parseInputLines() llamado con contenido de longitud:", textContent.length);
+        console.log("app.js: parseInputLines() INICIO. Contenido recibido (primeros 100 chars):", textContent.substring(0,100));
         const lines = textContent.split(/\r?\n/);
         const inputs = [];
-        lines.forEach(line => {
+        lines.forEach((line, index) => {
             const trimmedLine = line.trim();
-            if (trimmedLine === '' || trimmedLine.startsWith('#')) return;
+            console.log(`app.js: Procesando línea ${index + 1}: "${trimmedLine}"`);
+
+            if (trimmedLine === '' || trimmedLine.startsWith('#')) {
+                console.log(`app.js: Línea ${index + 1} ignorada (vacía o comentario).`);
+                return;
+            }
             
             let platform = 'unknown';
-            let identifier = trimmedLine;
+            let identifier = trimmedLine; 
             const lowerLine = trimmedLine.toLowerCase();
+            console.log(`app.js: Línea ${index + 1} en minúsculas: "${lowerLine}"`);
 
-            // CORRECCIÓN AQUÍ: Hacer la detección de YouTube más genérica
-            if (lowerLine.includes('youtube.com/c/ChannelName6')) { // Detecta la base de la URL de YouTube
+            // Detección de Plataforma
+            // Variables para ver el resultado de cada .includes()
+            const includesYouTube = lowerLine.includes('youtube.com/c/ChannelName7');
+            const includesYouTuBe = lowerLine.includes('youtu.be/'); // Para youtu.be
+            const includesTwitch = lowerLine.includes('twitch.tv/');
+            const includesKick = lowerLine.includes('kick.com/');
+            const includesFacebook = lowerLine.includes('facebook.com/');
+
+            console.log(`app.js: Línea ${index + 1} - Checks: YouTube=${includesYouTube}, YouTu.be=${includesYouTuBe}, Twitch=${includesTwitch}, Kick=${includesKick}, Facebook=${includesFacebook}`);
+
+            if (includesTwitch) {
+                platform = 'twitch';
+            } else if (includesKick) {
+                platform = 'kick';
+            } else if (includesYouTube || includesYouTuBe) {
                 platform = 'youtube';
-            } else if (lowerLine.includes('facebook.com/')) {
+            } else if (includesFacebook) {
                 platform = 'facebook';
             }
-            // Podrías añadir más 'else if' para otras plataformas como Twitch
-            // else if (lowerLine.includes('twitch.tv/')) {
-            //     platform = 'twitch';
-            // }
+            
+            console.log(`app.js: Línea ${index + 1} - Plataforma detectada: ${platform}`);
             inputs.push({ platform, identifier, originalInput: trimmedLine });
         });
-        console.log("app.js: parseInputLines() completado. Entradas detectadas:", inputs);
+        console.log("app.js: parseInputLines() FIN. Entradas detectadas:", inputs);
         return inputs;
     }
 
@@ -209,11 +226,17 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'facebook':
                 streamApiFunction = typeof getFacebookStreamStatus === 'function' ? getFacebookStreamStatus : null;
                 break;
+            case 'twitch':
+                streamApiFunction = typeof getTwitchStreamStatus === 'function' ? getTwitchStreamStatus : null;
+                break;
+            case 'kick':
+                streamApiFunction = typeof getKickStreamStatus === 'function' ? getKickStreamStatus : null;
+                break;
             default:
                 console.warn(`app.js: Plataforma no soportada: ${streamToUpdate.platform} para ${streamToUpdate.identifier}`);
                 const unsupportedInfo = { ...streamToUpdate, status: 'No Soportado', lastCheck: new Date().toLocaleTimeString() };
                 monitoredStreams[index] = unsupportedInfo;
-                if (typeof updateStreamRow === 'function') updateStreamRow(unsupportedInfo); 
+                if (typeof updateStreamRow === 'function') updateStreamRow(unsupportedInfo);
                 return;
         }
 
@@ -221,27 +244,27 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`app.js: Función API no definida o no es una función para la plataforma: ${streamToUpdate.platform}. ¿Se cargó api_${platformKey}.js y define la función globalmente?`);
             const errorInfo = { ...streamToUpdate, status: 'Error Config.', lastCheck: new Date().toLocaleTimeString() };
             monitoredStreams[index] = errorInfo;
-            if (typeof updateStreamRow === 'function') updateStreamRow(errorInfo); 
+            if (typeof updateStreamRow === 'function') updateStreamRow(errorInfo);
             return;
         }
-        
+
         try {
-            const updatedStreamInfoFromApi = await streamApiFunction(streamToUpdate.identifier); 
-            
+            const updatedStreamInfoFromApi = await streamApiFunction(streamToUpdate.identifier);
+
             monitoredStreams[index] = {
-                ...streamToUpdate, 
-                ...updatedStreamInfoFromApi, 
+                ...streamToUpdate,
+                ...updatedStreamInfoFromApi,
                 identifier: updatedStreamInfoFromApi.identifier || streamToUpdate.identifier,
                 platform: updatedStreamInfoFromApi.platform || streamToUpdate.platform,
                 lastCheck: new Date().toLocaleTimeString()
             };
             console.log(`app.js: Respuesta de API para ${monitoredStreams[index].identifier}:`, monitoredStreams[index]);
-            if (typeof updateStreamRow === 'function') updateStreamRow(monitoredStreams[index]); 
+            if (typeof updateStreamRow === 'function') updateStreamRow(monitoredStreams[index]);
         } catch (error) {
             console.error(`app.js: Error en API call para ${streamToUpdate.identifier}:`, error);
             const errorInfo = { ...streamToUpdate, status: 'Error API', lastCheck: new Date().toLocaleTimeString(), details: error.message };
             monitoredStreams[index] = errorInfo;
-            if (typeof updateStreamRow === 'function') updateStreamRow(errorInfo); 
+            if (typeof updateStreamRow === 'function') updateStreamRow(errorInfo);
         }
     }
 
@@ -249,22 +272,22 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("app.js: checkAllStreams() llamado.");
         if (monitoredStreams.length === 0) {
             console.log("app.js: No hay streams para verificar en checkAllStreams.");
-            if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true); 
+            if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true);
             return;
         }
-        if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true); 
-        
+        if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true);
+
         const promises = monitoredStreams.map((stream, index) => processStreamCheck(stream, index));
-        
+
         try {
             await Promise.all(promises);
             console.log("app.js: Todas las promesas de processStreamCheck resueltas.");
         } catch (error) {
             console.error("app.js: Error durante Promise.all en checkAllStreams:", error);
-            if (typeof showAppMessage === 'function') showAppMessage('Algunas verificaciones fallaron durante el refresco.', 'warning'); 
+            if (typeof showAppMessage === 'function') showAppMessage('Algunas verificaciones fallaron durante el refresco.', 'warning');
         } finally {
-            if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false); 
-            if (typeof updateGlobalLastCheckTime === 'function') updateGlobalLastCheckTime(new Date().toLocaleTimeString()); 
+            if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false);
+            if (typeof updateGlobalLastCheckTime === 'function') updateGlobalLastCheckTime(new Date().toLocaleTimeString());
             console.log("app.js: checkAllStreams() finalizado.");
         }
     }
