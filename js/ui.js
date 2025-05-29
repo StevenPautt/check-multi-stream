@@ -1,5 +1,6 @@
+// js/ui.js
+
 /**
- * ui.js
  * Contiene funciones para manipular la interfaz de usuario (DOM).
  * Actualiza la tabla, muestra mensajes, indicadores de carga, etc.
  */
@@ -8,7 +9,7 @@
 const streamResultsBody = document.getElementById('streamResultsBody');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const appMessageDiv = document.getElementById('appMessage');
-const fileNameDisplay = document.getElementById('fileNameDisplay');
+// const fileNameDisplay = document.getElementById('fileNameDisplay'); // Ya no se usa si cambiaste a textarea
 const globalLastCheckTimeSpan = document.getElementById('globalLastCheckTime');
 const noStreamsMessage = document.getElementById('noStreamsMessage');
 
@@ -19,7 +20,7 @@ function clearStreamTable() {
     if (streamResultsBody) {
         streamResultsBody.innerHTML = '';
     }
-    showNoStreamsMessage(true); // Mostrar mensaje de "no hay streams" por defecto después de limpiar
+    // No mostramos "no streams" aquí, se maneja después de intentar añadir filas
 }
 
 /**
@@ -29,27 +30,32 @@ function clearStreamTable() {
  */
 function createPlatformBadge(platform) {
     const badge = document.createElement('span');
-    badge.classList.add('badge', 'platform-badge');
+    badge.classList.add('badge', 'platform-badge'); // Clases de Bootstrap y personalizadas
     const icon = document.createElement('i');
-    icon.classList.add('bi', 'me-1');
+    icon.classList.add('bi', 'me-1'); // Iconos de Bootstrap
 
-    let platformText = platform.charAt(0).toUpperCase() + platform.slice(1);
+    let platformText = platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Desconocido';
 
-    switch (platform.toLowerCase()) {
+    switch (platform ? platform.toLowerCase() : 'unknown') {
         case 'youtube':
-            badge.classList.add('platform-youtube');
+            badge.classList.add('platform-youtube'); // De style.css
             icon.classList.add('bi-youtube');
             break;
         case 'facebook':
-            badge.classList.add('platform-facebook');
+            badge.classList.add('platform-facebook'); // De style.css
             icon.classList.add('bi-facebook');
             break;
-        case 'twitch': // Ejemplo si se añade
-            badge.classList.add('platform-twitch');
+        case 'twitch':
+            badge.classList.add('platform-twitch'); // De style.css
             icon.classList.add('bi-twitch');
             break;
+        case 'kick':
+            badge.classList.add('platform-kick'); // De style.css
+            // Kick no tiene un ícono obvio en Bootstrap Icons, puedes usar uno genérico o añadir FontAwesome
+            icon.classList.add('bi-play-circle-fill'); // Ejemplo
+            break;
         default:
-            badge.classList.add('platform-generic');
+            badge.classList.add('platform-generic'); // De style.css
             icon.classList.add('bi-question-circle-fill');
             platformText = 'Desconocido';
     }
@@ -60,34 +66,44 @@ function createPlatformBadge(platform) {
 
 /**
  * Crea y devuelve un elemento badge para el estado del stream.
- * @param {string} status - Estado del stream (ej. 'Live', 'Offline', 'Error').
+ * @param {string} status - Estado del stream (ej. 'Live', 'Offline', 'Error', 'Pendiente...').
  * @returns {HTMLElement} El elemento span del badge.
  */
 function createStatusBadge(status) {
     const badge = document.createElement('span');
-    badge.classList.add('badge', 'rounded-pill', 'status-badge');
+    badge.classList.add('badge', 'rounded-pill', 'status-badge'); // Clases de Bootstrap y personalizadas
     const icon = document.createElement('i');
-    icon.classList.add('bi', 'me-1');
+    icon.classList.add('bi', 'me-1'); // Iconos de Bootstrap
 
-    let statusText = status;
+    let statusText = status || 'Desconocido';
 
-    switch (status.toLowerCase()) {
+    switch (status ? status.toLowerCase() : 'unknown') {
         case 'live':
-            badge.classList.add('status-live');
+            badge.classList.add('status-live'); // De style.css
             icon.classList.add('bi-broadcast-pin');
             break;
         case 'offline':
-            badge.classList.add('status-offline');
+            badge.classList.add('status-offline'); // De style.css
             icon.classList.add('bi-camera-video-off-fill');
             break;
         case 'error':
-            badge.classList.add('status-error');
+        case 'error config.': // Para manejar "Error Config." también
+        case 'error api':
+            badge.classList.add('status-error'); // De style.css
             icon.classList.add('bi-x-octagon-fill');
             break;
-        default: // 'unknown' o cualquier otro
-            badge.classList.add('status-unknown');
+        case 'no soportado':
+            badge.classList.add('status-unknown'); // Reutilizar estilo 'unknown' o crear 'unsupported'
+            icon.classList.add('bi-slash-circle-fill');
+            break;
+        case 'pendiente...':
+            badge.classList.add('status-pending'); // Necesitarías un estilo para 'status-pending' en style.css
+            icon.classList.add('bi-hourglass-split');
+            statusText = 'Pendiente'; // Acortar para el badge
+            break;
+        default: 
+            badge.classList.add('status-unknown'); // De style.css
             icon.classList.add('bi-patch-question-fill');
-            statusText = status || 'Desconocido'; // Si status es undefined o null
     }
     badge.appendChild(icon);
     badge.appendChild(document.createTextNode(statusText));
@@ -98,27 +114,35 @@ function createStatusBadge(status) {
 /**
  * Añade una fila a la tabla de streams con la información proporcionada.
  * @param {object} streamInfo - Objeto con la información del stream.
- * Ej: { platform: 'youtube', identifier: 'CanalX', name: 'Nombre del Canal X', status: 'Live', lastCheck: '10:30:00' }
+ * Debe tener: originalInput (para ID de fila), platform, name (para mostrar), status, lastCheck.
  */
 function addStreamToTable(streamInfo) {
     if (!streamResultsBody) return;
 
-    showNoStreamsMessage(false); // Ocultar mensaje de "no hay streams" ya que estamos añadiendo uno
+    if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(false);
 
     const row = streamResultsBody.insertRow();
-    // Usar un ID único para la fila, combinando plataforma e identificador para facilitar la actualización.
-    // Asegúrate de que el identificador sea seguro para usar como parte de un ID de DOM.
-    const safeIdentifier = (streamInfo.identifier || streamInfo.name || Date.now().toString()).replace(/[^a-zA-Z0-9-_]/g, '');
-    row.id = `stream-${streamInfo.platform}-${safeIdentifier}`;
+    // Usar originalInput para un ID de fila estable y único.
+    // Sanitizar originalInput para que sea un ID HTML válido.
+    const stableRowKey = (streamInfo.originalInput || `stream-${Date.now()}-${Math.random()}`).replace(/[^a-zA-Z0-9-_]/g, '');
+    row.id = `stream-${streamInfo.platform}-${stableRowKey}`;
 
     const cellPlatform = row.insertCell();
-    cellPlatform.appendChild(createPlatformBadge(streamInfo.platform || 'unknown'));
+    cellPlatform.appendChild(createPlatformBadge(streamInfo.platform));
 
-    const cellIdentifier = row.insertCell();
-    cellIdentifier.textContent = streamInfo.name || streamInfo.identifier || 'N/A'; // Muestra el nombre si está disponible, sino el identificador
+    const cellNameIdentifier = row.insertCell();
+    cellNameIdentifier.textContent = streamInfo.name || streamInfo.originalInput || 'N/A';
+    // Opcional: añadir el identificador de API si es diferente y útil
+    // if (streamInfo.identifier && streamInfo.identifier !== streamInfo.name) {
+    //    const idSpan = document.createElement('small');
+    //    idSpan.className = 'text-muted d-block';
+    //    idSpan.textContent = `(${streamInfo.identifier})`;
+    //    cellNameIdentifier.appendChild(idSpan);
+    // }
+
 
     const cellStatus = row.insertCell();
-    cellStatus.appendChild(createStatusBadge(streamInfo.status || 'unknown'));
+    cellStatus.appendChild(createStatusBadge(streamInfo.status));
 
     const cellLastCheck = row.insertCell();
     cellLastCheck.textContent = streamInfo.lastCheck || new Date().toLocaleTimeString();
@@ -126,31 +150,41 @@ function addStreamToTable(streamInfo) {
 
 /**
  * Actualiza una fila existente en la tabla de streams.
- * Si la fila no existe, la crea.
  * @param {object} streamInfo - Objeto con la información actualizada del stream.
  */
 function updateStreamRow(streamInfo) {
     if (!streamResultsBody) return;
-    const safeIdentifier = (streamInfo.identifier || streamInfo.name || Date.now().toString()).replace(/[^a-zA-Z0-9-_]/g, '');
-    const rowId = `stream-${streamInfo.platform}-${safeIdentifier}`;
+
+    const stableRowKey = (streamInfo.originalInput || `stream-${Date.now()}-${Math.random()}`).replace(/[^a-zA-Z0-9-_]/g, '');
+    const rowId = `stream-${streamInfo.platform}-${stableRowKey}`;
     let row = document.getElementById(rowId);
 
     if (row) { // La fila existe, actualizar celdas
-        // Celda de Plataforma (generalmente no cambia, pero por si acaso)
-        row.cells[0].innerHTML = ''; // Limpiar
-        row.cells[0].appendChild(createPlatformBadge(streamInfo.platform || 'unknown'));
+        // La plataforma usualmente no cambia, pero el nombre sí puede.
+        // Celda 0: Plataforma (si el originalInput o platform pudieran cambiar y afectar el ID)
+        // Si la plataforma pudiera cambiar para un mismo originalInput, necesitaríamos un ID aún más estable.
+        // Por ahora asumimos que originalInput es la clave única para la *intención* del usuario.
 
-        // Celda Identificador/Nombre
-        row.cells[1].textContent = streamInfo.name || streamInfo.identifier || 'N/A';
+        // Celda 1: Nombre/Identificador
+        row.cells[1].textContent = streamInfo.name || streamInfo.originalInput || 'N/A';
+        // Opcional: añadir el identificador de API
+        // if (row.cells[1].querySelector('small')) row.cells[1].querySelector('small').remove(); // Limpiar ID anterior
+        // if (streamInfo.identifier && streamInfo.identifier !== streamInfo.name) {
+        //    const idSpan = document.createElement('small');
+        //    idSpan.className = 'text-muted d-block';
+        //    idSpan.textContent = `(${streamInfo.identifier})`;
+        //    row.cells[1].appendChild(idSpan);
+        // }
         
-        // Celda de Estado
-        row.cells[2].innerHTML = ''; // Limpiar
-        row.cells[2].appendChild(createStatusBadge(streamInfo.status || 'unknown'));
+        // Celda 2: Estado
+        row.cells[2].innerHTML = ''; // Limpiar para poner el nuevo badge
+        row.cells[2].appendChild(createStatusBadge(streamInfo.status));
         
-        // Celda Última Verificación
+        // Celda 3: Última Verificación
         row.cells[3].textContent = streamInfo.lastCheck || new Date().toLocaleTimeString();
-    } else { // La fila no existe, añadirla
-        addStreamToTable(streamInfo);
+    } else { 
+        console.warn(`ui.js: No se encontró la fila con ID ${rowId} para actualizar. Creando nueva fila (esto no debería pasar si originalInput es estable).`);
+        addStreamToTable(streamInfo); // Fallback, pero idealmente no se llega aquí
     }
 }
 
@@ -174,9 +208,8 @@ function showAppMessage(message, type = 'info', duration = 5000) {
     if (!appMessageDiv) return;
 
     appMessageDiv.className = 'alert'; // Resetear clases
-    appMessageDiv.classList.add(`alert-${type}`);
+    appMessageDiv.classList.add(`alert-${type}`, 'alert-dismissible', 'fade', 'show'); // Clases Bootstrap para alerta con cierre
     
-    // Añadir ícono según el tipo (opcional, pero mejora la UX)
     let iconClass = '';
     switch(type) {
         case 'success': iconClass = 'bi-check-circle-fill'; break;
@@ -185,16 +218,28 @@ function showAppMessage(message, type = 'info', duration = 5000) {
         case 'danger':  iconClass = 'bi-x-octagon-fill'; break;
     }
 
-    appMessageDiv.innerHTML = iconClass ? `<i class="bi ${iconClass} me-2"></i>${message}` : message;
+    appMessageDiv.innerHTML = `
+        ${iconClass ? `<i class="bi ${iconClass} me-2"></i>` : ''}
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `; // Añadido botón de cierre de Bootstrap
     appMessageDiv.classList.remove('d-none');
 
-    // Ocultar mensaje después de la duración especificada (si duration > 0)
     if (duration > 0) {
         setTimeout(() => {
-            if (appMessageDiv) appMessageDiv.classList.add('d-none');
+            // Usar Bootstrap para cerrar la alerta si existe
+            const alertInstance = bootstrap.Alert.getInstance(appMessageDiv);
+            if (alertInstance) {
+                alertInstance.close();
+            } else {
+                // Fallback si no se puede obtener instancia (raro)
+                appMessageDiv.classList.add('d-none');
+                appMessageDiv.classList.remove('show');
+            }
         }, duration);
     }
 }
+
 
 /**
  * Actualiza el texto de la "Última Verificación Global".
@@ -216,9 +261,11 @@ function showNoStreamsMessage(show) {
     }
 }
 
-// Inicializar la UI al cargar el script si es necesario (ej. asegurar que mensaje de "no streams" se muestre si la tabla está vacía)
+// Inicializar la UI al cargar el script si es necesario
 document.addEventListener('DOMContentLoaded', () => {
     if (streamResultsBody && streamResultsBody.children.length === 0) {
-        showNoStreamsMessage(true);
+        if (typeof showNoStreamsMessage === 'function') {
+            showNoStreamsMessage(true);
+        }
     }
 });

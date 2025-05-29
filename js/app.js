@@ -17,13 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("app.js: Usuario autenticado o la función isUserLoggedIn no está disponible. Continuando...");
 
+
     // --- Selectores de Elementos del DOM ---
     const urlInputArea = document.getElementById('urlInputArea');
     const checkStreamsButton = document.getElementById('checkStreamsButton');
     const logoutButton = document.getElementById('logoutButton');
 
     // --- Estado de la Aplicación ---
-    let monitoredStreams = [];
+    let monitoredStreams = []; // Almacena objetos { platform, identifier (para API), name (para display), originalInput (para ID de fila), status, lastCheck, title, details }
     let refreshIntervalId = null;
     const REFRESH_INTERVAL_MS = 60000 * 2;
     console.log("app.js: Variables de estado inicializadas.");
@@ -96,18 +97,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true);
         if (typeof clearStreamTable === 'function') clearStreamTable();
-        monitoredStreams = [];
+        monitoredStreams = []; // Resetear lista de streams monitoreados
         console.log("app.js: Tabla limpiada y streams monitoreados reseteados.");
 
         try {
             console.log("app.js: Contenido del área de texto (primeros 200 caracteres):", textContent.substring(0, 200));
-            const parsedInputs = parseInputLines(textContent);
-            console.log("app.js: Entradas parseadas:", parsedInputs);
+            const parsedInputs = parseInputLines(textContent); // Esta es tu función parseInputLines que ya funciona
+            console.log("app.js: Entradas parseadas del área de texto:", JSON.parse(JSON.stringify(parsedInputs)));
 
             if (parsedInputs.length === 0) {
-                console.warn("app.js: No se encontraron entradas válidas.");
+                console.warn("app.js: El área de texto no contiene entradas válidas o está vacía después de parsear.");
                 if (typeof showAppMessage === 'function') showAppMessage('No se encontraron URLs válidas en el texto ingresado.', 'warning');
                 if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true);
+                if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false); // Ocultar si no hay nada que hacer
                 return;
             }
 
@@ -116,41 +118,51 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             parsedInputs.forEach(input => {
-                const streamInfo = { // Cambiado de initialStreamInfo para consistencia con tu código
+                // input de parseInputLines es { platform, identifier (URL limpia), originalInput (URL trimeada) }
+                const streamInfo = {
                     platform: input.platform || 'unknown',
-                    identifier: input.identifier,
-                    name: input.originalInput,
+                    identifier: input.identifier,      // Este es el identificador para la API (URL limpia)
+                    name: input.originalInput,         // Nombre inicial para mostrar (la URL original trimeada)
+                    originalInput: input.originalInput, // Clave estable para el ID de la fila DOM
                     status: 'Pendiente...',
-                    lastCheck: '-'
+                    lastCheck: '-',
+                    title: null, // Se llenará con la respuesta de la API
+                    details: null // Para mensajes de error
                 };
                 monitoredStreams.push(streamInfo);
                 if (typeof addStreamToTable === 'function') {
-                    addStreamToTable(streamInfo);
+                    addStreamToTable(streamInfo); // ui.js usará originalInput para el ID de la fila
                 }
             });
+            console.log("app.js: Streams iniciales añadidos a la tabla y a monitoredStreams.");
 
-            console.log("app.js: Streams añadidos a la tabla."); // Cambiado de "Streams iniciales añadidos..."
+            await checkAllStreams();
+            console.log("app.js: Verificación inicial de todos los streams completada.");
 
-            await checkAllStreams(); // Esta llamada ahora debería funcionar
-            console.log("app.js: Verificación inicial completa."); // Cambiado de "Primera verificación..."
-
-            if (refreshIntervalId) clearInterval(refreshIntervalId);
+            if (refreshIntervalId) {
+                clearInterval(refreshIntervalId);
+            }
             refreshIntervalId = setInterval(checkAllStreams, REFRESH_INTERVAL_MS);
-            console.log("app.js: Intervalo de refresco iniciado."); // Cambiado de "Intervalo de refresco configurado..."
+            console.log("app.js: Intervalo de refresco configurado cada", REFRESH_INTERVAL_MS, "ms.");
 
         } catch (error) {
-            console.error("app.js: Error procesando streams:", error); // Cambiado de "Error procesando el contenido..."
+            console.error('app.js: Error procesando el contenido del área de texto en handleCheckStreams:', error);
             if (typeof showAppMessage === 'function') {
                 showAppMessage('Error al procesar las URLs ingresadas.', 'danger');
             }
-        } finally {
             if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false);
+        } finally {
+            // El showLoadingIndicator(false) se maneja mejor dentro de checkAllStreams
+            // o aquí si hubo un error antes de llamar a checkAllStreams
+            if (monitoredStreams.length > 0 && typeof showLoadingIndicator === 'function' && !refreshIntervalId) {
+                 // Si hubo un error antes de la primera llamada a checkAllStreams, el spinner podría quedar activo
+            }
             if (typeof updateGlobalLastCheckTime === 'function') updateGlobalLastCheckTime(new Date().toLocaleTimeString());
             console.log("app.js: handleCheckStreams() finalizado.");
         }
     }
 
-    // --- Tu función parseInputLines modificada ---
+    // Tu función parseInputLines (la que te funciona para detectar plataformas)
     function parseInputLines(textContent) {
         console.log("app.js: parseInputLines() INICIO.");
         const lines = textContent.split(/\r?\n/);
@@ -158,42 +170,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         lines.forEach((line, index) => {
             let processedLine = line.trim();
+            // Tu lógica de limpieza:
             if (processedLine.endsWith('[Object Object]')) {
+                console.warn(`DEBUG: Línea ${index + 1} - Se detectó "[Object Object]" al final. Limpiando.`);
                 processedLine = processedLine.slice(0, -15).trim();
+                console.log(`DEBUG: Línea ${index + 1} (después de limpiar "[Object Object]"): [${processedLine}]`);
             }
 
             const parts = processedLine.split(/\s+/);
-            if (parts.length > 1 && parts[0].startsWith('http')) {
+            if (parts.length > 1 && parts[0].toLowerCase().startsWith('http')) {
+                console.warn(`DEBUG: Línea ${index + 1} - Espacios detectados después de la URL inicial. Usando solo la primera parte: "${parts[0]}"`);
                 processedLine = parts[0];
+                console.log(`DEBUG: Línea ${index + 1} (después de tomar primera parte si hay espacios): [${processedLine}]`);
             }
 
             if (processedLine === '' || processedLine.startsWith('#')) {
-                return; // Salta esta iteración del bucle forEach
+                console.log(`DEBUG: Línea ${index + 1} ignorada (vacía o comentario).`);
+                return; 
             }
 
             const lowerLine = processedLine.toLowerCase();
             let platform = 'unknown';
 
-            // Tu lógica de detección de plataformas que te funciona:
+            console.log(`DEBUG: Línea ${index + 1} (finalLineToProcess para detección): [${processedLine}] (lowerLine: [${lowerLine}])`);
+
+
             if (lowerLine.includes('twitch.tv/')) platform = 'twitch';
             else if (lowerLine.includes('youtube.com/') || lowerLine.includes('youtu.be/')) platform = 'youtube';
             else if (lowerLine.includes('kick.com/')) platform = 'kick';
             else if (lowerLine.includes('facebook.com/')) platform = 'facebook';
-
+            
+            console.log(`DEBUG: Línea ${index + 1} - Plataforma final detectada: ${platform}`);
             inputs.push({
-                originalInput: processedLine, // Usar processedLine que es la URL limpia
-                identifier: processedLine,    // Usar processedLine que es la URL limpia
+                originalInput: processedLine, // Usar la línea ya trimeada y potencialmente limpiada
+                identifier: processedLine,    // Usar la línea ya trimeada y potencialmente limpiada
                 platform: platform
             });
         });
 
-        console.log("app.js: parseInputLines() FIN.");
+        console.log("app.js: parseInputLines() FIN. Entradas detectadas:", JSON.parse(JSON.stringify(inputs)));
         return inputs;
     }
 
-    // --- FUNCIONES REINSERTADAS ---
+
     async function processStreamCheck(streamToUpdate, index) {
-        console.log(`app.js: processStreamCheck() para [${index}] (ID para API: ${streamToUpdate.identifier}, Mostrado: ${streamToUpdate.name}) (${streamToUpdate.platform})`);
+        // streamToUpdate viene de monitoredStreams, ya tiene originalInput, platform, etc.
+        console.log(`app.js: processStreamCheck() para [${index}] (Original: ${streamToUpdate.originalInput}, ID actual para API: ${streamToUpdate.identifier}) (${streamToUpdate.platform})`);
         let streamApiFunction;
         let platformKey = streamToUpdate.platform.toLowerCase();
 
@@ -211,39 +233,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 streamApiFunction = typeof getKickStreamStatus === 'function' ? getKickStreamStatus : null;
                 break;
             default:
-                console.warn(`app.js: Plataforma no soportada: ${streamToUpdate.platform} para ${streamToUpdate.name}`);
-                const unsupportedInfo = { ...streamToUpdate, status: 'No Soportado', lastCheck: new Date().toLocaleTimeString() };
-                monitoredStreams[index] = unsupportedInfo;
+                console.warn(`app.js: Plataforma no soportada: ${streamToUpdate.platform} para ${streamToUpdate.originalInput}`);
+                const unsupportedInfo = { 
+                    ...streamToUpdate, 
+                    status: 'No Soportado', 
+                    lastCheck: new Date().toLocaleTimeString() 
+                };
+                monitoredStreams[index] = unsupportedInfo; // Actualizar en el array global
                 if (typeof updateStreamRow === 'function') updateStreamRow(unsupportedInfo);
                 return;
         }
 
         if (!streamApiFunction) {
-            console.error(`app.js: Función API no definida o no es una función para la plataforma: ${streamToUpdate.platform}. ¿Se cargó api_${platformKey}.js y define la función globalmente?`);
-            const errorInfo = { ...streamToUpdate, status: 'Error Config.', lastCheck: new Date().toLocaleTimeString() };
-            monitoredStreams[index] = errorInfo;
-            if (typeof updateStreamRow === 'function') updateStreamRow(errorInfo);
+            console.error(`app.js: Función API no definida para ${streamToUpdate.platform}. ¿Se cargó api_${platformKey}.js?`);
+            const errorConfigInfo = { 
+                ...streamToUpdate, 
+                status: 'Error Config.', 
+                lastCheck: new Date().toLocaleTimeString() 
+            };
+            monitoredStreams[index] = errorConfigInfo; // Actualizar en el array global
+            if (typeof updateStreamRow === 'function') updateStreamRow(errorConfigInfo);
             return;
         }
-
+        
         try {
-            const updatedStreamInfoFromApi = await streamApiFunction(streamToUpdate.identifier); 
+            // La función de API (ej. getYouTubeStreamStatus) recibe el 'identifier'
+            // que es la URL potencialmente limpiada por parseInputLines.
+            // Debería devolver un objeto que incluya:
+            // - name (ej. título del canal)
+            // - identifier (ej. Channel ID resuelto)
+            // - status ('Live', 'Offline', 'Error')
+            // - platform (debería ser la misma que se le pasó o la que determine la API)
+            // - title (título del stream, opcional)
+            // - details (detalles de error, opcional)
+            const apiResponse = await streamApiFunction(streamToUpdate.identifier); 
 
             monitoredStreams[index] = {
-                ...streamToUpdate, 
-                ...updatedStreamInfoFromApi, 
-                identifier: updatedStreamInfoFromApi.identifier || streamToUpdate.identifier,
-                platform: updatedStreamInfoFromApi.platform || streamToUpdate.platform,
-                name: updatedStreamInfoFromApi.name || streamToUpdate.name, // Asegurar que el nombre se actualice si la API lo provee
+                ...streamToUpdate, // Preserva 'originalInput' de streamToUpdate
+                name: apiResponse.name || streamToUpdate.name, // Prioriza nombre de API, sino el original (URL)
+                identifier: apiResponse.identifier || streamToUpdate.identifier, // Prioriza ID de API, sino el original (URL)
+                status: apiResponse.status || 'Error Desconocido',
+                title: apiResponse.title,
+                details: apiResponse.details,
+                platform: apiResponse.platform || streamToUpdate.platform, // Asegurar que la plataforma se mantenga
                 lastCheck: new Date().toLocaleTimeString()
             };
-            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].name}:`, JSON.parse(JSON.stringify(monitoredStreams[index])));
+            
+            console.log(`app.js: Respuesta de API para ${monitoredStreams[index].originalInput}:`, JSON.parse(JSON.stringify(monitoredStreams[index])));
             if (typeof updateStreamRow === 'function') updateStreamRow(monitoredStreams[index]);
         } catch (error) {
-            console.error(`app.js: Error en API call para ${streamToUpdate.name}:`, error);
-            const errorInfo = { ...streamToUpdate, status: 'Error API', lastCheck: new Date().toLocaleTimeString(), details: error.message };
-            monitoredStreams[index] = errorInfo;
-            if (typeof updateStreamRow === 'function') updateStreamRow(errorInfo);
+            console.error(`app.js: Error en API call para ${streamToUpdate.originalInput}:`, error);
+            const errorApiInfo = { 
+                ...streamToUpdate, 
+                status: 'Error API', 
+                lastCheck: new Date().toLocaleTimeString(), 
+                details: error.message 
+            };
+            monitoredStreams[index] = errorApiInfo; // Actualizar en el array global
+            if (typeof updateStreamRow === 'function') updateStreamRow(errorApiInfo);
         }
     }
 
@@ -252,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (monitoredStreams.length === 0) {
             console.log("app.js: No hay streams para verificar en checkAllStreams.");
             if (typeof showNoStreamsMessage === 'function') showNoStreamsMessage(true);
+             if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false); // Ocultar si no hay nada que hacer
             return;
         }
         if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true);
@@ -262,6 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await Promise.all(promises);
             console.log("app.js: Todas las promesas de processStreamCheck resueltas.");
         } catch (error) {
+            // Este catch es por si Promise.all mismo falla, aunque los errores individuales
+            // ya se manejan dentro de processStreamCheck.
             console.error("app.js: Error durante Promise.all en checkAllStreams:", error);
             if (typeof showAppMessage === 'function') showAppMessage('Algunas verificaciones fallaron durante el refresco.', 'warning');
         } finally {
@@ -270,11 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("app.js: checkAllStreams() finalizado.");
         }
     }
-    // --- FIN DE FUNCIONES REINSERTADAS ---
-
-    // Iniciar la app
+    
+    // --- Iniciar la Aplicación ---
     initializeApp();
+    console.log("app.js: initializeApp() ha sido invocada al final de DOMContentLoaded.");
 });
 
-// AL FINAL DE js/app.js
-console.log("app.js: Script finalizado (parseo inicial completo por el navegador). Esperando DOMContentLoaded."); // Movido aquí
+console.log("app.js: Script finalizado (parseo inicial completo por el navegador). Esperando DOMContentLoaded.");
