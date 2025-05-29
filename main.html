@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -38,18 +38,18 @@
                 <h5 class="card-title section-title"><i class="bi bi-gear-wide-connected me-2"></i>Verification Controls</h5>
                 <div id="appMessage" class="alert d-none" role="alert"></div>
 
-                <div class="row g-3 mb-3 align-items-end">
+                <form id="youtubeApiKeyForm" class="row g-3 mb-3 align-items-end">
                     <div class="col-md-8">
                         <label for="youtubeApiKeyInput" class="form-label">YouTube API Key (optional, for YouTube checks):</label>
-                        <input type="password" id="youtubeApiKeyInput" class="form-control form-control-sm" placeholder="Paste your YouTube API Key here">
+                        <input type="password" id="youtubeApiKeyInput" class="form-control form-control-sm" placeholder="Paste your YouTube API Key here" autocomplete="new-password">
                     </div>
                     <div class="col-md-4">
-                        <button id="saveApiKeyButton" class="btn btn-secondary btn-sm w-100">Save API Key</button>
+                        <button type="submit" id="saveApiKeyButton" class="btn btn-secondary btn-sm w-100">Save API Key</button>
                     </div>
                     <div class="col-12">
                         <small id="apiKeyStatus" class="form-text text-muted"></small>
                     </div>
-                </div>
+                </form>
                 
                 <hr/>
 
@@ -63,23 +63,34 @@ The Wild Project, https://www.youtube.com/watch?v=mJCJUTpwnNM"></textarea>
                 </div>
 
                 <div class="row g-3 mt-3 align-items-center">
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-6 col-sm-3 mb-2 mb-sm-0">
                         <button class="btn btn-primary w-100" id="checkStreamsButton">
-                            <i class="bi bi-play-btn me-1"></i> Check All (from Textarea)
+                            <i class="bi bi-play-btn me-1"></i> Check All
                         </button>
                     </div>
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-6 col-sm-3 mb-2 mb-sm-0">
                         <button class="btn btn-info w-100" id="manualRefreshButton">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Manual Refresh All
+                            <i class="bi bi-arrow-clockwise me-1"></i> Manual Refresh
                         </button>
                     </div>
-                    <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
-                        <small class="text-muted global-last-check-label">Global Last Check: <span id="globalLastCheckTime">-</span></small>
+                    <div class="col-6 col-sm-3 mb-2 mb-sm-0"> 
+                        <button class="btn btn-outline-success w-100" id="importListButton">
+                            <i class="bi bi-upload me-1"></i> Import List
+                        </button>
+                        <input type="file" id="importFileInput" accept=".txt,.csv" style="display:none;">
+                    </div>
+                    <div class="col-6 col-sm-3"> 
+                        <button class="btn btn-outline-primary w-100" id="exportListButton">
+                            <i class="bi bi-download me-1"></i> Export List
+                        </button>
                     </div>
                 </div>
-                 <div class="row mt-2">
-                    <div class="col-12">
-                        <small id="youtubeQuotaStatus" class="form-text text-muted"></small>
+                <div class="row mt-2">
+                    <div class="col-12 col-md-8">
+                         <small id="youtubeQuotaStatus" class="form-text text-muted"></small>
+                    </div>
+                    <div class="col-12 col-md-4 text-md-end">
+                        <small class="text-muted global-last-check-label">Global Last Check: <span id="globalLastCheckTime">-</span></small>
                     </div>
                 </div>
             </div>
@@ -98,7 +109,8 @@ The Wild Project, https://www.youtube.com/watch?v=mJCJUTpwnNM"></textarea>
                             <option value="kick">Kick</option>
                             <option value="facebook">Facebook</option>
                             <option value="unknown">Unknown</option>
-                            <option value="unsupported">Unsupported</option> </select>
+                            <option value="unsupported">Unsupported</option>
+                        </select>
                     </div>
                     <div id="loadingSpinner" class="spinner-border text-primary d-none" role="status">
                         <span class="visually-hidden">Loading...</span>
@@ -114,11 +126,11 @@ The Wild Project, https://www.youtube.com/watch?v=mJCJUTpwnNM"></textarea>
                                 <th class="stream-title-col">Stream Title</th>
                                 <th class="viewers-col">Viewers</th>
                                 <th class="last-check-col">Last Check</th>
-                            </tr>
+                                <th class="actions-col">Actions</th> </tr>
                         </thead>
                         <tbody id="streamResultsBody" class="table-group-divider"></tbody>
                     </table>
-                     <p id="noStreamsMessage" class="text-center text-muted mt-3 py-3 d-none">No streams to display. Paste some URLs (Nickname, URL) and click "Check URLs".</p>
+                     <p id="noStreamsMessage" class="text-center text-muted mt-3 py-3 d-none">No streams to display. Paste URLs (Nickname, URL) and click "Check All".</p>
                 </div>
             </div>
         </section>

@@ -1,10 +1,12 @@
 // js/app.js
 
+// AL INICIO DE js/app.js (antes de todo)
 console.log("app.js: Script initiated and parsed by browser.");
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("app.js: DOMContentLoaded event fired. HTML is ready.");
 
+    // --- Autenticación y Protección de Ruta ---
     if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) {
         console.warn('app.js: User not authenticated. Redirecting to index.html...');
         window.location.href = 'index.html';
@@ -15,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("app.js: User authenticated. Continuing app initialization...");
 
+
+    // --- Selectores de Elementos del DOM ---
     const urlInputArea = document.getElementById('urlInputArea');
     const checkStreamsButton = document.getElementById('checkStreamsButton');
     const logoutButton = document.getElementById('logoutButton');
@@ -24,10 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveApiKeyButton = document.getElementById('saveApiKeyButton');
     const youtubeApiKeyForm = document.getElementById('youtubeApiKeyForm');
     const manualRefreshButton = document.getElementById('manualRefreshButton');
+    const exportListButton = document.getElementById('exportListButton');
+    const importListButton = document.getElementById('importListButton');
+    const importFileInput = document.getElementById('importFileInput');
 
-    let monitoredStreams = []; 
+    // --- Estado de la Aplicación ---
+    let monitoredStreams = [];
     let refreshIntervalId = null;
-    const REFRESH_INTERVAL_MS = 60000 * 5;
+    const REFRESH_INTERVAL_MS = 60000 * 5; // 5 minutos
     
     let filterNameValue = '';
     let filterPlatformValue = '';
@@ -35,19 +43,95 @@ document.addEventListener('DOMContentLoaded', () => {
     const YT_API_KEY_LS = 'youtubeApiKey';
     const YT_QUOTA_COUNT_LS = 'youtubeQuotaCount';
     const YT_QUOTA_DATE_LS = 'youtubeQuotaDate';
-    const YT_DAILY_QUOTA_LIMIT = 9000; 
+    const YT_DAILY_QUOTA_LIMIT = 9000;
     let currentYoutubeApiKey = '';
+
+    const STREAM_LIST_LS_KEY = 'multiStreamCheckerList';
 
     console.log("app.js: State variables initialized.");
 
+    // --- Funciones de Persistencia ---
+    function saveStreamListToLocalStorage() {
+        if (urlInputArea) {
+            localStorage.setItem(STREAM_LIST_LS_KEY, urlInputArea.value);
+            console.log("app.js: Stream list saved to localStorage.");
+        }
+    }
+
+    function loadStreamListFromLocalStorage() {
+        const savedList = localStorage.getItem(STREAM_LIST_LS_KEY);
+        if (savedList && urlInputArea) {
+            urlInputArea.value = savedList;
+            console.log("app.js: Stream list loaded from localStorage into textarea.");
+            if (typeof showAppMessage === 'function') {
+                showAppMessage('Previously saved list loaded. Click "Check All" or "Manual Refresh" to process.', 'info', 7000);
+            }
+        } else {
+            console.log("app.js: No saved stream list found in localStorage.");
+        }
+    }
+
+    // --- Funciones de Importar/Exportar ---
+    function handleExportList() {
+        console.log("app.js: handleExportList function CALLED.");
+        if (!urlInputArea || !urlInputArea.value.trim()) {
+            if (typeof showAppMessage === 'function') showAppMessage('Nothing to export. Paste some URLs first.', 'warning');
+            return;
+        }
+        const textToSave = urlInputArea.value;
+        const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'stream_list.txt';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+        if (typeof showAppMessage === 'function') showAppMessage('Stream list exported as stream_list.txt!', 'success');
+    }
+
+    function handleImportFile(event) {
+        console.log("app.js: handleImportFile function CALLED.");
+        const file = event.target.files[0];
+        if (!file) {
+            console.log("app.js: No file selected for import.");
+            return;
+        }
+        if (!file.name.endsWith('.txt') && !file.name.endsWith('.csv') && file.type !== "text/plain" && file.type !== "text/csv") {
+            if (typeof showAppMessage === 'function') showAppMessage('Invalid file type. Please select a .txt or .csv file.', 'danger');
+            event.target.value = null;
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fileContent = e.target.result;
+            if (urlInputArea) {
+                urlInputArea.value = fileContent;
+                saveStreamListToLocalStorage();
+                if (typeof showAppMessage === 'function') showAppMessage('List imported successfully! Click "Check All" to process.', 'success', 5000);
+            }
+        };
+        reader.onerror = (e) => {
+            console.error("app.js: Error reading file for import:", e);
+            if (typeof showAppMessage === 'function') showAppMessage('Error reading file.', 'danger');
+        };
+        reader.readAsText(file);
+        event.target.value = null;
+    }
+
+    // --- Inicialización ---
     function initializeApp() {
         console.log("app.js: initializeApp() called.");
         loadYoutubeApiKey();
+        loadStreamListFromLocalStorage();
         setupEventListeners();
         applyFiltersAndRender();
         console.log("app.js: initializeApp() completed.");
     }
-
+    
     function loadYoutubeApiKey() {
         currentYoutubeApiKey = localStorage.getItem(YT_API_KEY_LS) || '';
         if (youtubeApiKeyInput) youtubeApiKeyInput.value = currentYoutubeApiKey;
@@ -100,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function incrementYoutubeQuotaCount(cost = 100) {
-        if (!currentYoutubeApiKey) return getYoutubeQuotaCount();
+        if (!currentYoutubeApiKey) return getYoutubeQuotaCount(); 
         let count = getYoutubeQuotaCount();
         count += cost;
         localStorage.setItem(YT_QUOTA_COUNT_LS, count.toString());
@@ -119,22 +203,42 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupEventListeners() {
         console.log("app.js: setupEventListeners() running.");
         if (checkStreamsButton) {
-            checkStreamsButton.addEventListener('click', () => handleCheckStreams(true)); // true = force YouTube for initial load from textarea
+            // El botón "Check All (from Textarea)" ahora SÍ intentará verificar YouTube la primera vez
+            checkStreamsButton.addEventListener('click', () => handleCheckStreams(true)); 
         }
         if (manualRefreshButton) {
             manualRefreshButton.addEventListener('click', () => {
                 console.log("app.js: Manual Refresh All button clicked.");
                 if (monitoredStreams.length === 0) {
-                    if(typeof showAppMessage === 'function') showAppMessage('No streams to refresh. Please add URLs first using "Check All (from Textarea)".', 'info');
+                    if(typeof showAppMessage === 'function') showAppMessage('No streams to refresh. Please add URLs and click "Check All" first.', 'info');
                     return;
                 }
-                checkAllStreams(true); // true = force YouTube check
+                checkAllStreams(true); // true = SÍ verificar YouTube
             });
         }
-        if (youtubeApiKeyForm) {
+        if (youtubeApiKeyForm) { 
             youtubeApiKeyForm.addEventListener('submit', saveYoutubeApiKeyAction);
-        } else if (saveApiKeyButton) { // Fallback if form not found
+        } else if (saveApiKeyButton) { 
              saveApiKeyButton.addEventListener('click', saveYoutubeApiKeyAction);
+        }
+        if (exportListButton) { 
+            exportListButton.addEventListener('click', handleExportList);
+            console.log("app.js: Event listener for 'click' on exportListButton added.");
+        }
+        if (importListButton) { 
+            importListButton.addEventListener('click', () => {
+                if(importFileInput) {
+                    console.log("app.js: Import List button clicked, triggering hidden file input.");
+                    importFileInput.click(); 
+                } else {
+                    console.warn("app.js: importFileInput element not found.");
+                }
+            });
+            console.log("app.js: Event listener for 'click' on importListButton added.");
+        }
+        if (importFileInput) { 
+            importFileInput.addEventListener('change', handleImportFile);
+            console.log("app.js: Event listener for 'change' on importFileInput added.");
         }
         
         if (logoutButton) {
@@ -158,20 +262,24 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("app.js: setupEventListeners() completed.");
     }
 
+    // isForceYouTubeCheck: true si YouTube debe ser verificado (ej. carga inicial desde textarea, o refresh manual)
+    //                     false si es un auto-refresco (donde YouTube se omite)
     async function handleCheckStreams(isForceYouTubeCheck = false) { 
         console.log(`app.js: handleCheckStreams() called. Force YouTube: ${isForceYouTubeCheck}`);
         
-        if (!urlInputArea) {
+        if (!urlInputArea) { 
             console.error("app.js: urlInputArea element not found.");
-            if (typeof showAppMessage === 'function') showAppMessage('Internal Error: URL input area not found.', 'danger');
+            if(typeof showAppMessage === 'function') showAppMessage('Internal error: URL input area not found.', 'danger');
             return;
         }
         const textContent = urlInputArea.value;
 
-        if (!textContent.trim()) {
-            if (typeof showAppMessage === 'function') showAppMessage('Please paste some URLs first.', 'warning');
-            return;
+        if (!textContent.trim()) { 
+            if(typeof showAppMessage === 'function') showAppMessage('Please paste some URLs first.', 'warning');
+            return; 
         }
+
+        saveStreamListToLocalStorage(); 
 
         if (typeof showLoadingIndicator === 'function') showLoadingIndicator(true);
         
@@ -179,12 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof clearStreamTable === 'function') clearStreamTable();
         console.log("app.js: Monitored streams reset and table cleared.");
 
+        // Solo procesar el textarea si tiene contenido.
+        // Si es un manual refresh sin contenido en textarea, checkAllStreams usará la lista existente.
         if (textContent.trim()){
-            const parsedInputs = parseInputLines(textContent);
+            const parsedInputs = parseInputLines(textContent); 
             console.log("app.js: Parsed inputs from textarea:", JSON.parse(JSON.stringify(parsedInputs)));
 
             if (parsedInputs.length === 0) {
-                if (typeof showAppMessage === 'function') showAppMessage('No valid URLs found in the input.', 'warning');
+                if (typeof showAppMessage === 'function') showAppMessage('No valid URLs found in the input text.', 'warning');
                 applyFiltersAndRender(); 
                 if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false);
                 return;
@@ -193,91 +303,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
             monitoredStreams = parsedInputs.map(input => ({
                 platform: input.platform || 'unknown',
-                identifier: input.url,          // This is the URL part from "Nickname, URL"
-                name: input.nickname,           // This is the Nickname part, or the URL if no nickname
-                originalInput: input.url,       // The URL part, used for stable row ID and link href
-                nickname: input.nickname,       // Explicitly store the nickname
+                identifier: input.url, 
+                name: input.nickname,  
+                originalInput: input.url, 
+                nickname: input.nickname, 
                 status: 'Pending...',
                 lastCheck: '-',
                 title: null, viewers: null, details: null
             }));
             applyFiltersAndRender(); 
-        } else if (monitoredStreams.length === 0) { 
-             applyFiltersAndRender(); 
-             if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false);
-             return;
+            console.log("app.js: Initial streams populated for monitoring.");
+        } else if (monitoredStreams.length === 0 && !isForceYouTubeCheck) { 
+            // Si el textarea está vacío Y NO es un manual refresh (que podría operar sobre una lista ya cargada)
+            applyFiltersAndRender();
+            if (typeof showLoadingIndicator === 'function') showLoadingIndicator(false);
+            return;
         }
         
-        console.log("app.js: Initial streams populated for monitoring.");
-
+        // La primera verificación después de procesar el textarea (isForceYouTubeCheck = true) SÍ incluirá YouTube.
+        // Los refrescos automáticos (isForceYouTubeCheck = false) NO incluirán YouTube.
+        // El botón "Manual Refresh All" llama a checkAllStreams(true) directamente.
         await checkAllStreams(isForceYouTubeCheck); 
         console.log("app.js: Stream check cycle completed.");
 
         if (refreshIntervalId) clearInterval(refreshIntervalId);
-        refreshIntervalId = setInterval(() => checkAllStreams(false), REFRESH_INTERVAL_MS); 
+        refreshIntervalId = setInterval(() => checkAllStreams(false), REFRESH_INTERVAL_MS); // Auto-refresh NO fuerza YT
         console.log("app.js: Refresh interval updated.");
         
         if (typeof updateGlobalLastCheckTime === 'function') updateGlobalLastCheckTime(new Date().toLocaleTimeString('en-US'));
         console.log("app.js: handleCheckStreams() finished.");
     }
     
+    // Tu función parseInputLines (la que te funciona para detectar plataformas y extraer nickname, url)
     function parseInputLines(textContent) {
         console.log("app.js: parseInputLines() START.");
         const lines = textContent.split(/\r?\n/);
         const inputs = [];
         lines.forEach((line, index) => {
-            const originalLine = line;
-            let processedLine = line.trim(); 
-            console.log(`DEBUG: Line ${index + 1} (original): [${originalLine}]`);
-
-            if (processedLine === '' || processedLine.startsWith('#')) {
-                console.log(`DEBUG: Line ${index + 1} ignored (empty or comment).`);
-                return; 
-            }
-
+            let processedLine = line.trim();
             let nickname = null;
             let urlPart = processedLine;
             const commaIndex = processedLine.indexOf(',');
-
             if (commaIndex !== -1) {
                 nickname = processedLine.substring(0, commaIndex).trim();
                 urlPart = processedLine.substring(commaIndex + 1).trim();
-                console.log(`DEBUG: Line ${index + 1} - Parsed Nickname: "${nickname}", URL Part: "${urlPart}"`);
             } else {
-                nickname = urlPart; // If no comma, use the whole line as nickname and URL
-                console.log(`DEBUG: Line ${index + 1} - No comma, using "${urlPart}" as Nickname and URL.`);
+                nickname = urlPart; // Si no hay coma, la URL es también el "nickname"
             }
             
-            // Apply aggressive cleaning to the urlPart
-            let cleanedUrl = urlPart;
             const objectObjectString = "[Object Object]";
-            if (cleanedUrl.endsWith(objectObjectString)) {
+            if (urlPart.endsWith(objectObjectString)) {
                 console.warn(`DEBUG: Line ${index + 1} - Detected "${objectObjectString}" at the end of URL part. Cleaning.`);
-                cleanedUrl = cleanedUrl.substring(0, cleanedUrl.length - objectObjectString.length).trim();
+                urlPart = urlPart.slice(0, -objectObjectString.length).trim();
             }
-            const urlPartsArray = cleanedUrl.split(/\s+/);
-            if (urlPartsArray.length > 0 && (urlPartsArray[0].toLowerCase().startsWith('http://') || urlPartsArray[0].toLowerCase().startsWith('https://'))) {
-                if (urlPartsArray.length > 1) {
-                     console.warn(`DEBUG: Line ${index + 1} - Spaces detected after initial URL in URL part. Using first part: "${urlPartsArray[0]}"`);
+            const parts = urlPart.split(/\s+/);
+            if (parts.length > 0 && (parts[0].toLowerCase().startsWith('http://') || parts[0].toLowerCase().startsWith('https://'))) {
+                if (parts.length > 1) {
+                     console.warn(`DEBUG: Line ${index + 1} - Spaces detected after initial URL in URL part. Using first part: "${parts[0]}"`);
                 }
-                cleanedUrl = urlPartsArray[0];
+                urlPart = parts[0];
             }
-            console.log(`DEBUG: Line ${index + 1} (cleanedUrl for platform detection): [${cleanedUrl}] (Length: ${cleanedUrl.length})`);
+
+            if (urlPart === '' || urlPart.startsWith('#')) {
+                console.log(`DEBUG: Line ${index + 1} ignored (empty or comment).`);
+                return; 
+            }
             
-            const lowerUrl = cleanedUrl.toLowerCase();
+            const lowerUrl = urlPart.toLowerCase();
             let platform = 'unknown';
 
+            // Tu lógica de detección de plataformas
             if (lowerUrl.includes('twitch.tv/')) platform = 'twitch';
             else if (lowerUrl.includes('youtube.com/') || lowerUrl.includes('youtu.be/')) platform = 'youtube';
             else if (lowerUrl.includes('kick.com/')) platform = 'kick';
             else if (lowerUrl.includes('facebook.com/')) platform = 'facebook';
             
-            console.log(`DEBUG: Line ${index + 1} - Detected Platform: ${platform}`);
+            console.log(`DEBUG: Line ${index + 1} - Nickname: "${nickname}", URL Part: "${urlPart}", Platform: ${platform}`);
             inputs.push({ 
                 nickname: nickname, 
-                url: cleanedUrl, // This is the identifier for the API
+                url: urlPart, // Este es el 'identifier' que se usará para la API
                 platform: platform,
-                originalInputLine: originalLine // Keep the very original line for reference if needed
+                originalInputLine: line // La línea original del textarea por si acaso
             });
         });
         console.log("app.js: parseInputLines() END. Detected inputs:", JSON.parse(JSON.stringify(inputs)));
@@ -287,18 +393,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyFiltersAndRender() {
         if (!monitoredStreams) return;
         let streamsToDisplay = monitoredStreams;
-
-        if (filterNameValue) {
+        if (filterNameValue) { 
             streamsToDisplay = streamsToDisplay.filter(stream =>
                 (stream.nickname && stream.nickname.toLowerCase().includes(filterNameValue)) ||
-                (stream.name && stream.name.toLowerCase().includes(filterNameValue)) || 
+                (stream.name && stream.name.toLowerCase().includes(filterNameValue)) ||
                 (stream.identifier && stream.identifier.toLowerCase().includes(filterNameValue)) ||
                 (stream.originalInput && stream.originalInput.toLowerCase().includes(filterNameValue)) ||
                 (stream.title && stream.title.toLowerCase().includes(filterNameValue)) 
             );
         }
         if (filterPlatformValue) {
-            streamsToDisplay = streamsToDisplay.filter(stream =>
+             streamsToDisplay = streamsToDisplay.filter(stream =>
                 stream.platform && stream.platform.toLowerCase() === filterPlatformValue
             );
         }
@@ -312,15 +417,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function processStreamCheck(streamEntry, index, isForceYouTubeCheck) { 
         const originalNicknameForLog = streamEntry.nickname;
-        const urlForApi = streamEntry.identifier; 
+        const urlForApi = streamEntry.identifier; // Este es el 'url' limpio de parseInputLines
         console.log(`app.js: processStreamCheck() for [${index}] (Nickname: ${originalNicknameForLog}, URL: ${urlForApi}, Platform: ${streamEntry.platform}, ForceYouTube: ${isForceYouTubeCheck})`);
         
         let streamApiFunction;
         const platformKey = streamEntry.platform.toLowerCase();
 
         if (platformKey === 'youtube' && !isForceYouTubeCheck) { 
-            console.log("app.js: YouTube check skipped (not forced).");
-            return; 
+            console.log("app.js: YouTube check skipped (not forced for auto-refresh).");
+            // No actualizamos el estado, mantenemos el último conocido o "Pendiente"
+            // La UI no se actualizará para esta fila específica en este ciclo de auto-refresco.
+            return; // Importante retornar para no continuar con la llamada API
         }
         
         let apiKeyForYouTube = null;
@@ -358,13 +465,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             if (platformKey === 'youtube') {
-                incrementYoutubeQuotaCount(100); 
+                incrementYoutubeQuotaCount(100); // Asumir 100 por búsqueda, o 200 si resolución + estado
             }
             const apiResponse = await streamApiFunction(urlForApi, platformKey === 'youtube' ? apiKeyForYouTube : undefined); 
             
             monitoredStreams[index] = {
-                ...streamEntry,
-                name: apiResponse.name || streamEntry.nickname, // API name, fallback to user's nickname
+                ...streamEntry, // Preserva originalInput, nickname
+                name: apiResponse.name || streamEntry.nickname, 
                 identifier: apiResponse.identifier || urlForApi, 
                 status: apiResponse.status || 'Unknown Error',
                 title: apiResponse.title,
@@ -375,12 +482,9 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             console.log(`app.js: API response for ${originalNicknameForLog}:`, JSON.parse(JSON.stringify(monitoredStreams[index])));
             
-            if (platformKey === 'youtube' && monitoredStreams[index].details === 'Cuota de YouTube API excedida.') { // Check for exact Spanish message from conceptual API
-                updateYoutubeQuotaStatus(); 
-            } else if (platformKey === 'youtube' && monitoredStreams[index].details && monitoredStreams[index].details.toLowerCase().includes('quotaexceeded')) { // More generic check
+            if (platformKey === 'youtube' && monitoredStreams[index].details && monitoredStreams[index].details.toLowerCase().includes('quotaexceeded')) {
                 updateYoutubeQuotaStatus();
             }
-
         } catch (error) {
             console.error(`app.js: API call error for ${originalNicknameForLog}:`, error);
             monitoredStreams[index] = { ...streamEntry, status: 'API Error', lastCheck: new Date().toLocaleTimeString('en-US'), details: error.message };
@@ -400,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await Promise.all(promises);
+            console.log("app.js: All stream check promises resolved.");
         } catch (error) {
             console.error("app.js: Error during Promise.all in checkAllStreams:", error);
             if (typeof showAppMessage === 'function') showAppMessage('Some checks failed during refresh.', 'warning');
